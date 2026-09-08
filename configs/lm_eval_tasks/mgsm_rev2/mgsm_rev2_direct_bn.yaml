@@ -1,0 +1,14 @@
+task: mgsm_rev2_direct_bn
+include: _mgsm_rev2_common_yaml
+dataset_kwargs:
+  delimiter: "\t"
+  column_names: ["question", "answer_number"]
+  data_files: /configs/lm_eval_tasks/mgsm_rev2/data/mgsm_bn.tsv
+doc_to_text: '{{"প্রশ্ন: "+question+"\nAnswer:"}}'
+generation_kwargs:
+  until:
+    - "প্রশ্ন:"
+    - "</s>"
+    - "<|im_end|>"
+  do_sample: false
+  temperature: 0.0

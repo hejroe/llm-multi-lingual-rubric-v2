@@ -1,0 +1,17 @@
+# Raw run outputs: high-volume, regenerable only via a live inference run.
+# Per the Data Management Plan (Section 6), these do not belong in git
+# history at volume and need a separate backup destination instead.
+results/*
+!results/.gitkeep
+
+# This project's own scratch/cleanup folder (device_bash cannot delete
+# files directly on this device; items here are awaiting manual deletion).
+_to_delete/
+
+# Common junk
+__pycache__/
+*.pyc
+.env
+.DS_Store
+Thumbs.db
+*.log

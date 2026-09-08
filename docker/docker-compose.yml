@@ -1,0 +1,67 @@
+# Convenience wrapper around the Dockerfile for repeated runs.
+#
+# Usage (from the docker/ directory):
+#   docker compose build
+#   docker compose run --rm eval bash scripts/check_ollama_connectivity.sh
+#   docker compose run --rm eval lm_eval --model local-chat-completions \
+#     --model_args base_url=http://host.docker.internal:11434/v1/chat/completions,model=llama3.2:1b,num_concurrent=1 \
+#     --tasks mmlu_prox_en_biology --limit 5 --output_path /results/smoke_test_mmlu_prox_en
+#
+# extra_hosts below is what makes host.docker.internal resolve correctly when
+# running under native Docker Engine on WSL2 (Docker Desktop provides this
+# mapping automatically; native Docker Engine does not, so we add it here).
+# Ollama itself runs natively on Windows, not as a service in this file — see
+# docs/STUDY_PROTOCOL.md Section 9.2 for why (corrected there after review;
+# this compose file's shape is what's actually built, not the other way round).
+#
+# The `llamacpp` service below is the one exception: it DOES run
+# containerised, with GPU passthrough, and IS reached via compose
+# service-name networking (http://llamacpp:8080), because — unlike Ollama —
+# it has no separate native-Windows install path and this project's Set D
+# (RQ4, tool-calling) specifically needs its OpenAI-compatible tool-calling
+# support (docs/adr/0001-inference-backend-abstraction.md). Closes the gap
+# tracked in docs/STUDY_PROTOCOL.md Section 12.10.
+#
+# Run one backend at a time: this project's target hardware has 8GB VRAM
+# (per its original scoping), and Ollama (native) and `llamacpp` (this
+# service) both want the GPU. They are not designed to serve requests
+# concurrently — stop the Ollama-serving runs before starting a Set D run
+# against `llamacpp`, not the other way round.
+services:
+  eval:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: llm-eval-pilot
+    volumes:
+      - ../results:/results
+      - ../configs:/configs
+      - ../scripts:/home/runner/scripts
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    working_dir: /home/runner
+
+  llamacpp:
+    image: ghcr.io/ggml-org/llama.cpp:server-cuda
+    volumes:
+      - ../models:/models
+    # Point -m at whichever GGUF file you've placed in ../models — see
+    # models/README.md for how to obtain one matching a registered
+    # candidate (docs/MODEL_REGISTER.md). --jinja is required for
+    # OpenAI-style tool/function calling (llama.cpp server docs,
+    # docs/function-calling.md) — without it, Set D's tool-choice
+    # requests will not work even though the endpoint otherwise responds.
+    command: >
+      -m /models/model.gguf
+      --host 0.0.0.0 --port 8080
+      --jinja
+      --n-gpu-layers 999
+    ports:
+      - "8081:8080"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

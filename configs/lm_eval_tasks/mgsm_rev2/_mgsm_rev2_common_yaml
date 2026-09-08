@@ -1,0 +1,43 @@
+# Shared template for this project's custom MGSM-Rev2 task family.
+# Mirrors the stock lm-evaluation-harness `mgsm_direct_*` task structure
+# (output_type, filters, metric) exactly, so results are comparable in
+# method to the (excluded) original — the only thing that differs is the
+# data source. See docs/adr/0008-mgsm-rev2-custom-task.md for why this
+# file exists at all instead of using the stock `mgsm` task.
+#
+# Verified against a real lm-evaluation-harness install (2026-09-08):
+# dataset loads correctly via the local `csv` loader with a tab delimiter,
+# doc_to_text/doc_to_target render as expected, and a generate_until
+# request constructs without error, for German and Bengali. Not yet
+# validated end-to-end against a live model backend (Ollama/llama.cpp) —
+# that is the pilot's first real run, not this scaffolding step.
+dataset_path: csv
+output_type: generate_until
+test_split: train
+target_delimiter: ""
+generation_kwargs:
+  until:
+    - "\n\n"
+    - "\n"
+  do_sample: false
+  temperature: 0.0
+doc_to_target: '{{answer_number|string}}'
+filter_list:
+  - name: remove_whitespace
+    filter:
+      - function: remove_whitespace
+      - function: take_first
+  - name: flexible-extract
+    filter:
+      - function: regex
+        group_select: -1
+        regex_pattern: (-?[$0-9.,]{2,})|(-?[0-9]+)
+      - function: take_first
+metric_list:
+  - metric: exact_match
+    aggregation: mean
+    higher_is_better: true
+    ignore_case: true
+    ignore_punctuation: true
+metadata:
+  version: 0.1

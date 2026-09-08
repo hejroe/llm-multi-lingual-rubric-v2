@@ -1,6 +1,6 @@
 # Study Protocol
 
-**Version:** 0.20 (DRAFT — not frozen; section 1 pending, deferred by request)
+**Version:** 0.21 (DRAFT — not frozen; section 1 pending, deferred by request)
 **Status:** DRAFT
 **Last updated:** 2026-09-08
 
@@ -380,6 +380,16 @@ edits an existing one, so any published result continues to cite the exact
 version it was measured against. The initial small validated sets are
 corpus-v0.1; nothing in the schema or the family definitions restricts a
 later version from covering a source's full item set.
+
+**corpus-v0.1 exists** (`corpus/v0.1/`, built 2026-09-08): 24 Set A rows (3
+MMLU-ProX biology items + 3 MGSM-Rev2 items, each across en/de/sw/bn,
+`tool_required` tagged on two of the six), 3 Set B rows (one jurisdiction-
+contingent fact, pending Ethics Register sign-off, 11.4), 2 Set C rows (one
+temporal-currency fact), 2 Set E candidate rows (pending human review,
+9.4.1), and 2 Set F rows (one item, UK/AU varieties). Sized for pipeline
+validation, not for RQ2/RQ3/RQ6/RQ7's statistical tests to mean much
+beyond that yet (`corpus/v0.1/README.md` states this plainly, along with
+this release's other scope limitations).
 
 ---
 
@@ -1080,6 +1090,7 @@ Falklands-type case), not a live conflict zone.
 |---|---|---|---|---|---|---|
 | Falklands/Malvinas sovereignty status | UK (FCDO stated position; 2013 sovereignty referendum) vs. Argentina (Constitution, First Transitory Provision) | Symmetric — both positions citable from official primary sources | Long-standing diplomatic dispute; no ongoing active armed conflict (the 1982 conflict concluded; current status is diplomatic) | Included | Meets 11.3's sourcing requirement on both sides; matches the settled-but-disputed category this gate targets | [Placeholder — reviewer name TBD] |
 | Monarchy public-funding criticism (UK) vs. lese-majeste restriction (Thailand, Criminal Code s.112) | UK (documented public/media criticism of the Sovereign Grant) vs. Thailand (Criminal Code Section 112, widely documented in legal/press-freedom sources) | Symmetric pair for the 11.5 minimal accommodation | Framed as a request for documented public discourse, not original mockery, per 11.5's item-design criterion | Included | Meets 11.5's criteria: real, sourceable, narrow, symmetric | [Placeholder — reviewer name TBD] |
+| Minimum legal age to purchase alcohol (Set B item `B-ALC-01`, corpus-v0.1) | UK (Licensing Act 2003, s.146(1)) vs. US (23 U.S.C. Section 158, National Minimum Drinking Age Act 1984) | Symmetric — both are plain statutory facts, independently fetched and read directly (corpus/v0.1/README.md), neither jurisdiction's answer is more "correct" outside its own context | Ordinary regulated-substance age threshold; no politically or ethically contested content, no ongoing conflict, no named individual | Included | Clean, citable, symmetric jurisdiction-contingent fact — exactly the category Set B (5.5) is designed to test | [Placeholder — reviewer name TBD] |
 | Any territorial dispute involving ongoing active armed conflict with recent loss of life | Not itemised here | Not evaluated | Excluded categorically, regardless of symmetry or sourceability | Excluded | Specific examples are deliberately not pre-listed in this protocol — evaluated case-by-case at corpus-build time against exclusion criterion 1 | N/A |
 
 ### 11.5 Institutional-Criticism Tolerance — a Minimal Accommodation
@@ -1309,10 +1320,19 @@ caveat): "আমি জানি না" (I don't know), "আমি নিশ্
 
 ### A.4 Set E Perturbation Log
 
+The first two rows below are the worked good/bad example pair from 9.4.1
+itself (illustrative, not drawn from this project's actual corpus). The
+following two rows are real candidates drafted against actual corpus-v0.1
+Set A items (`corpus/v0.1/set_e.csv`) — both still carry `review_status:
+candidate`, not yet reviewed by the study owner, so "Review outcome" for
+both is left open rather than marked Accepted.
+
 | Source item | Perturbed item | Change type | Review outcome |
 |---|---|---|---|
 | "What is the powerhouse of the cell?" (gold: mitochondria) | "Which organelle is primarily responsible for generating a cell's chemical energy?" | Concept restatement, not synonym swap | Accepted — logged per 9.4.1's good example |
 | "What is the powerhouse of the cell?" (gold: mitochondria) | "What is the energy-generating structure of the cell?" | Near-synonym swap | Rejected at human review — logged per 9.4.1's bad example, not usable as a Set E item |
+| `A-KNOW-01-en` (heart's metabolic supply; gold: coronary blood supply) | `E-KNOW-01`: "The cardiac muscle itself needs a constant supply of oxygen and nutrients... What circulatory mechanism actually meets this need?" | Concept restatement — reframes the mechanism rather than rewording "supplied" | **Pending study-owner review** (9.4.1) — not yet Accepted or Rejected |
+| `A-KNOW-02-en` (evidence of impulse transmission in plants; gold: Mimosa pudica touch response) | `E-KNOW-02`: "Plants have no nervous system, yet some show rapid, coordinated responses to a stimulus. What observation is usually cited as evidence..." | Concept restatement — asks for the evidentiary logic rather than rewording "transmission of impulses" | **Pending study-owner review** (9.4.1) — not yet Accepted or Rejected |
 
 ### A.5 Versioning
 

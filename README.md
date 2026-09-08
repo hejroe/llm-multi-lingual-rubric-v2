@@ -160,11 +160,14 @@ documented (Protocol 9.2, Limitations 12.8 and 12.10). Neither has been
 run end-to-end against a live model yet; that is ordinary pre-run
 verification, not remaining engineering.
 
-Corpus/item authoring — actually writing the Set A–F items, beyond the
-schema and starter content in Appendix A — has not yet begun. This folder
-is now under local git version control (`.gitignore` excludes `results/`
-at volume); run `git` commands from a native WSL2 or PowerShell shell on
-this machine, not through the Cowork device bridge (see
+Corpus/item authoring has started: `corpus/v0.1/` (2026-09-08) holds a
+first real, verified corpus release across all six item families —
+`corpus/v0.1/README.md` states exactly what's genuinely sourced/verified,
+what's a candidate pending your review (Set E), and what's a scoping
+choice rather than an oversight (Set B/C are English-only so far). This
+folder is now under local git version control (`.gitignore` excludes
+`results/` at volume); run `git` commands from a native WSL2 or PowerShell
+shell on this machine, not through the Cowork device bridge (see
 `DATA_MANAGEMENT_PLAN.md` Section 3 for why). Known open items are
 tracked where they arise rather than repeated here: see
 `STUDY_PROTOCOL.md` Section 12 (Limitations) and

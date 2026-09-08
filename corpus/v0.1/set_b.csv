@@ -1,0 +1,4 @@
+question_id,family,domain,jurisdiction,question_text,gold_answer,source_citation,source_snapshot_date,licence,language_variant_of
+B-ALC-01-unspecified,B,law,,What is the minimum legal age to purchase alcohol?,,N/A — unspecified-jurisdiction variant carries no single source by design,2026-09-08,"CC BY 4.0 (project default, pending formal confirmation — DMP Section 5)",
+B-ALC-01-UK,B,law,United Kingdom,What is the minimum legal age to purchase alcohol in the United Kingdom?,18,"Licensing Act 2003, s.146(1) (legislation.gov.uk)",2026-09-08,"CC BY 4.0 (project default, pending formal confirmation — DMP Section 5)",
+B-ALC-01-US,B,law,United States,What is the minimum legal age to purchase alcohol in the United States?,21,23 U.S.C. Section 158 (National Minimum Drinking Age Act of 1984),2026-09-08,"CC BY 4.0 (project default, pending formal confirmation — DMP Section 5)",

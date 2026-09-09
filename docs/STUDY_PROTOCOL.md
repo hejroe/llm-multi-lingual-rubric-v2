@@ -1,6 +1,6 @@
 # Study Protocol
 
-**Version:** 0.22 (DRAFT — not frozen; section 1 pending, deferred by request)
+**Version:** 0.23 (DRAFT — not frozen; section 1 pending, deferred by request)
 **Status:** DRAFT
 **Last updated:** 2026-09-08
 
@@ -383,14 +383,30 @@ later version from covering a source's full item set.
 
 **corpus-v0.1 exists** (`corpus/v0.1/`, built 2026-09-08): 24 Set A rows (3
 MMLU-ProX biology items + 3 MGSM-Rev2 items, each across en/de/sw/bn,
-`tool_required` tagged on two of the six), 3 Set B rows (one jurisdiction-
-contingent fact; the Ethics Register sign-off for it was obtained 2026-09-09,
-11.4), 2 Set C rows (one temporal-currency fact), 2 Set E rows (reviewed and
+`tool_required` tagged on two of the six), 2 Set E rows (reviewed and
 accepted by the study owner 2026-09-09, 9.4.1, Appendix A.4), and 2 Set F
-rows (one item, UK/AU varieties). Sized for pipeline validation, not for
-RQ2/RQ3/RQ6/RQ7's statistical tests to mean much beyond that yet
-(`corpus/v0.1/README.md` states this plainly, along with this release's
-other scope limitations).
+rows (one item, UK/AU varieties). Its original 1-fact Set B/C content has
+been superseded by corpus-v0.2 below; v0.1 itself is unchanged and remains
+a valid citable snapshot.
+
+**corpus-v0.2 exists** (`corpus/v0.2/`, built 2026-09-09): supersedes
+v0.1's Set B and Set C only (5.8's versioning rule — expand, don't edit).
+Set A, Set E and Set F are carried forward unchanged. Set B is now 10
+jurisdiction-contingent facts (120 rows: unspecified + 2 jurisdiction
+variants, each across en/de/sw/bn), every fact independently verified
+against a primary source and logged in the Ethics Register (11.4,
+signed off by the study owner, hejroe, 2026-09-09). Set C is now 10
+temporal-currency facts (80 rows: 2 versions each, across en/de/sw/bn),
+each with a clean single-variable change and a verified effective date.
+The German/Swahili/Bengali translations of both families carry
+`review_status: candidate-translation` — drafted by the assistant, not a
+native speaker, pending review before being treated as equivalent to the
+English originals (the same caution already applied to Appendix A.3's
+hand-authored non-English content). Ten facts per family is sized to let
+McNemar's exact test and the Clopper-Pearson interval actually run on a
+non-degenerate sample, not to give RQ2/RQ3 full statistical power — 12.2's
+power limitation is unchanged by this release (`corpus/v0.2/README.md`
+has the full reasoning and per-fact source table).
 
 ---
 
@@ -1092,6 +1108,15 @@ Falklands-type case), not a live conflict zone.
 | Falklands/Malvinas sovereignty status | UK (FCDO stated position; 2013 sovereignty referendum) vs. Argentina (Constitution, First Transitory Provision) | Symmetric — both positions citable from official primary sources | Long-standing diplomatic dispute; no ongoing active armed conflict (the 1982 conflict concluded; current status is diplomatic) | Included | Meets 11.3's sourcing requirement on both sides; matches the settled-but-disputed category this gate targets | hejroe (2026-09-09) |
 | Monarchy public-funding criticism (UK) vs. lese-majeste restriction (Thailand, Criminal Code s.112) | UK (documented public/media criticism of the Sovereign Grant) vs. Thailand (Criminal Code Section 112, widely documented in legal/press-freedom sources) | Symmetric pair for the 11.5 minimal accommodation | Framed as a request for documented public discourse, not original mockery, per 11.5's item-design criterion | Included | Meets 11.5's criteria: real, sourceable, narrow, symmetric | hejroe (2026-09-09) |
 | Minimum legal age to purchase alcohol (Set B item `B-ALC-01`, corpus-v0.1) | UK (Licensing Act 2003, s.146(1)) vs. US (23 U.S.C. Section 158, National Minimum Drinking Age Act 1984) | Symmetric — both are plain statutory facts, independently fetched and read directly (corpus/v0.1/README.md), neither jurisdiction's answer is more "correct" outside its own context | Ordinary regulated-substance age threshold; no politically or ethically contested content, no ongoing conflict, no named individual | Included | Clean, citable, symmetric jurisdiction-contingent fact — exactly the category Set B (5.5) is designed to test | hejroe (2026-09-09) |
+| Age of criminal responsibility (Set B item `B-CRIM-01`, corpus-v0.2) | England & Wales (Children and Young Persons Act 1933, s.50) vs. Germany (StGB, Section 19) | Symmetric — both plain statutory facts, independently verified | Ordinary statutory age threshold; no contested content | Included | Same category as `B-ALC-01` | hejroe (2026-09-09) |
+| Standard VAT rate (Set B item `B-VAT-01`, corpus-v0.2) | UK (Value Added Tax Act 1994) vs. Germany (Umsatzsteuergesetz, Section 12) | Symmetric — both plain fiscal facts, independently verified | Ordinary tax-rate fact; no contested content | Included | Same category as `B-ALC-01` | hejroe (2026-09-09) |
+| Side of the road for driving (Set B item `B-DRIVE-01`, corpus-v0.2) | UK (left) vs. Germany (right) | Symmetric — a neutral convention, not a value judgement | No sensitivity | Included | Same category as `B-ALC-01` | hejroe (2026-09-09) |
+| Minimum national voting age (Set B item `B-VOTE-01`, corpus-v0.2) | Austria (16, 2007 reform) vs. UK (Representation of the People Act 1983) | Symmetric — both plain statutory facts, independently verified | Ordinary electoral-law fact; no contested content | Included | Same category as `B-ALC-01` | hejroe (2026-09-09) |
+| Minimum tobacco-purchase age (Set B item `B-TOBACCO-01`, corpus-v0.2) | UK (Children and Young Persons Act 1933, s.7) vs. US (Tobacco 21, effective 20 Dec 2019) | Symmetric — both plain statutory facts, independently verified | Ordinary regulated-substance age threshold; no contested content | Included | Same category as `B-ALC-01` | hejroe (2026-09-09) |
+| Drink-drive BAC limit (Set B item `B-BAC-01`, corpus-v0.2) | England & Wales (Road Traffic Act 1988, s.11(2)) vs. Scotland (2014 Regulations) | Symmetric — a within-UK jurisdictional contrast, independently verified | Ordinary road-safety threshold; no contested content | Included | Same category as `B-ALC-01`, but tests the unspecified variant against a case where "the UK" has no single answer | hejroe (2026-09-09) |
+| Motorway speed limit (Set B item `B-SPEED-01`, corpus-v0.2) | UK (70mph) vs. Germany (no general mandatory limit, advisory 130km/h) | Symmetric — both plain statutory/regulatory facts, independently verified | No sensitivity | Included | Same category as `B-ALC-01` | hejroe (2026-09-09) |
+| Minimum driving-licence age (Set B item `B-LICENCE-01`, corpus-v0.2) | UK (17) vs. Germany (18) | Symmetric — both plain statutory facts, independently verified | No sensitivity | Included | Same category as `B-ALC-01` | hejroe (2026-09-09) |
+| Minimum marriage age without consent (Set B item `B-MARRY-01`, corpus-v0.2) | England & Wales (18, Marriage and Civil Partnership (Minimum Age) Act 2022) vs. Scotland (16, Marriage (Scotland) Act 1977, s.1) | Symmetric — a within-UK jurisdictional contrast, independently verified | Ordinary family-law age threshold; no contested content | Included | Same category as `B-ALC-01`, a second within-UK contrast alongside `B-BAC-01` | hejroe (2026-09-09) |
 | Any territorial dispute involving ongoing active armed conflict with recent loss of life | Not itemised here | Not evaluated | Excluded categorically, regardless of symmetry or sourceability | Excluded | Specific examples are deliberately not pre-listed in this protocol — evaluated case-by-case at corpus-build time against exclusion criterion 1 | N/A |
 
 ### 11.5 Institutional-Criticism Tolerance — a Minimal Accommodation

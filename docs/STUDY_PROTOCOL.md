@@ -1,8 +1,8 @@
 # Study Protocol
 
-**Version:** 0.23 (DRAFT — not frozen; section 1 pending, deferred by request)
+**Version:** 0.24 (DRAFT — not frozen; section 1 pending, deferred by request)
 **Status:** DRAFT
-**Last updated:** 2026-09-08
+**Last updated:** 2026-09-09
 
 Amendments after freeze are logged in Section 13, not made silently.
 
@@ -129,30 +129,27 @@ question-answering respectively, but neither tests cross-jurisdiction
 consistency for the same underlying fact, confirming this remains a
 genuine gap rather than a solved problem being re-done. For RQ5's
 risk-threshold framework, the NIST AI Risk Management Framework and
-Article 15 of the EU AI Act were both checked directly (10.6) and found
-to require a documented, context-specific accuracy level judged by
-likelihood and severity, not a fixed numeric threshold — the framework
-adopted in 10.6 follows this same approach rather than inventing a
-percentage.
+Article 15 of the EU AI Act both require (10.6) a documented,
+context-specific accuracy level judged by likelihood and severity, not a
+fixed numeric threshold — the framework adopted in 10.6 follows this same
+approach rather than inventing a percentage.
 
 ### 3.5 Positioning This Study
 
 Rather than building bespoke evaluation tooling, this pilot runs on
-EleutherAI's lm-evaluation-harness, which already implements a mature task
-configuration for MMLU-ProX (verified compatible with this pilot's
-backends and rubric, 9.2) and supports Ollama and other backends via an
-OpenAI-compatible API (9.2), and allows a custom rubric to sit alongside
-its existing scoring via configurable task definitions — meeting the goal,
-raised early in this project's design, of allowing others to define their
-own rubrics on the same underlying infrastructure rather than a closed,
-one-off scoring script. The harness's *built-in* MGSM task does not carry
-over to MGSM-Rev2 (9.2) — a custom task definition is still owed there,
-genuine engineering work this project has not yet done, not something the
-harness provides for free. This study's contribution is not a new
-evaluation harness, but a rubric and corpus design (Sections 5, 8) that
-tests jurisdiction-, currency-, tool-calibration- and variety-based
-consistency — axes the existing literature, checked in 3.3 and 3.4, does
-not currently cover together in one design.
+EleutherAI's lm-evaluation-harness, which implements a mature task
+configuration for MMLU-ProX (9.2) and supports Ollama and other backends
+via an OpenAI-compatible API (9.2), and allows a custom rubric to sit
+alongside its existing scoring via configurable task definitions, so
+others can define their own rubrics on the same infrastructure rather
+than a closed, one-off scoring script. The harness's *built-in* MGSM task
+does not cover MGSM-Rev2, however: a custom task definition was required
+and has been built (9.2, ADR 0008) — genuine engineering this project
+owns, not something the harness provides for free. This study's
+contribution is not a new evaluation harness, but a rubric and corpus
+design (Sections 5, 8) that tests jurisdiction-, currency-,
+tool-calibration- and variety-based consistency — axes the existing
+literature (3.3, 3.4) does not currently cover together in one design.
 
 ---
 
@@ -399,10 +396,10 @@ signed off by the study owner, hejroe, 2026-09-09). Set C is now 10
 temporal-currency facts (80 rows: 2 versions each, across en/de/sw/bn),
 each with a clean single-variable change and a verified effective date.
 The German/Swahili/Bengali translations of both families carry
-`review_status: candidate-translation` — drafted by the assistant, not a
-native speaker, pending review before being treated as equivalent to the
-English originals (the same caution already applied to Appendix A.3's
-hand-authored non-English content). Ten facts per family is sized to let
+`review_status: candidate-translation` — machine-drafted, not produced or
+reviewed by a native speaker, pending review before being treated as
+equivalent to the English originals (the same caution already applied to
+Appendix A.3's hand-authored non-English content). Ten facts per family is sized to let
 McNemar's exact test and the Clopper-Pearson interval actually run on a
 non-degenerate sample, not to give RQ2/RQ3 full statistical power — 12.2's
 power limitation is unchanged by this release (`corpus/v0.2/README.md`
@@ -756,9 +753,7 @@ sits behind `base_url` does not require a different harness setup.
 | vLLM | Validated alternate | Yes, full field support | Heavier GPU/throughput profile than needed for edge-model testing | Included — available as a substitute for llama.cpp if needed |
 | LM Studio | Considered | No — GUI-oriented, no headless server suited to this pipeline | N/A | Excluded — not suited to a reproducible, containerised pipeline |
 
-**Corrected against the actual project scaffolding** (this paragraph
-previously described a containerised-Ollama architecture that was never
-built — caught during review, not assumed correct): Ollama runs natively
+Ollama runs natively
 on the Windows host, using its own native GPU access, not inside a
 container. The lm-evaluation-harness container reaches it via
 `host.docker.internal`, with an `extra_hosts: host.docker.internal:
@@ -766,15 +761,15 @@ host-gateway` entry in `docker-compose.yml` because native Docker Engine
 under WSL2 (unlike Docker Desktop) does not map that hostname
 automatically — see that file's own header comment.
 
-`docker/docker-compose.yml` now (2026-09-08) also defines a `llamacpp`
+`docker/docker-compose.yml` also defines a `llamacpp`
 service — image `ghcr.io/ggml-org/llama.cpp:server-cuda`, reached via
 compose service-name networking (`http://llamacpp:8080`, not
 `host.docker.internal`, because unlike Ollama it has no separate
 native-Windows install path), with GPU passthrough via
 `deploy.resources.reservations.devices` and `--jinja` enabled (required
 for OpenAI-style tool/function calling — without it, Set D's tool-choice
-requests silently fail even though the endpoint otherwise responds). This
-closes the containerisation gap previously tracked at 12.10. No vLLM
+requests silently fail even though the endpoint otherwise responds),
+closing the containerisation gap tracked at 12.10. No vLLM
 container has been built — the Backend Register's "Included" status for
 vLLM still reflects only that it was checked and found suitable, not that
 its infrastructure exists; it remains available as a substitute for
@@ -790,8 +785,6 @@ field (9.6), not left implicit.
 
 **Task-Level Compatibility Notes**
 
-Checked directly against the harness's own task definitions, not assumed:
-
 - **MMLU-ProX** uses `output_type: generate_until` (free-text generation
   with a regex answer-extractor), not a loglikelihood/multiple-choice
   scoring path. This is fully compatible with the OpenAI-compatible
@@ -802,23 +795,19 @@ Checked directly against the harness's own task definitions, not assumed:
   tasks pull from `juletxara/mgsm` — the *original* MGSM dataset, which
   the Source Register (5.4) explicitly excludes as superseded. Using the
   stock `mgsm` tasks as-is would silently run against the excluded
-  dataset, not MGSM-Rev2. `configs/lm_eval_tasks/mgsm_rev2/` (added
-  2026-09-08) now provides `mgsm_rev2_direct_{de,sw,bn,en}` task
-  definitions pointing to vendored `google-research-datasets/MGSM-Rev2`
-  TSVs, mirroring the stock tasks' exact prompt conventions per language
-  so results stay comparable in method. Verified directly against a real
-  lm-evaluation-harness install: the dataset loads correctly for all four
-  languages (250 rows each), `doc_to_text`/`doc_to_target` render
-  correctly (confirmed for German and Bengali, covering both Latin and
-  non-Latin script handling), and a `generate_until` request constructs
-  without error. Not yet verified: the full filter/scoring pipeline
-  against a live model's actual output, and Swahili/English specifically
-  (same mechanism as the two verified languages, expected to behave
-  identically, but not independently re-tested) — that end-to-end
-  confirmation is the pilot's first real run against this task, not a
-  prerequisite for using it. This closes the gap previously tracked at
-  12.8 and in ADR 0008 (see that ADR's Consequences section for the
-  updated status).
+  dataset, not MGSM-Rev2. `configs/lm_eval_tasks/mgsm_rev2/` provides
+  `mgsm_rev2_direct_{de,sw,bn,en}` task definitions pointing to vendored
+  `google-research-datasets/MGSM-Rev2` TSVs, mirroring the stock tasks'
+  exact prompt conventions per language so results stay comparable in
+  method. Against a real lm-evaluation-harness install, the dataset loads
+  correctly for all four languages (250 rows each), `doc_to_text`/
+  `doc_to_target` render correctly for German and Bengali, covering both
+  Latin and non-Latin script handling, and a `generate_until` request
+  constructs without error. Not yet verified: the full filter/scoring
+  pipeline against a live model's actual output, and Swahili/English
+  specifically (same mechanism as the two verified languages, expected to
+  behave the same, but not independently re-tested) — that end-to-end
+  check is the pilot's first run against this task (12.8, ADR 0008).
 
 ### 9.3 Run Parameters
 
@@ -971,18 +960,15 @@ reused everywhere, rather than each RQ inventing its own summary shape.
 | RQ6 | Correct-rate, original vs. perturbed twin, per model | McNemar's exact test | A drop of 5 percentage points or more is treated as contamination-indicative rather than noise | Confirmatory |
 | RQ7 | Correct-rate across the US/UK/AU triplet | Cochran's Q test (three-way paired comparison), followed by pairwise McNemar with correction if Q is significant | As RQ1 | Confirmatory |
 
-**A note on the two values above, confirmed by the study owner
-(2026-09-08).** Alpha = 0.05 is the conventional default, not a value
-specific to this study. The RQ6 threshold of 5 percentage points was
-proposed because it sits at the same order of magnitude as the residual
-EN-vs-DE/ES gap this project's own originating review found once the
-original repo's three scoring bugs were corrected (roughly 4-6 percentage
-points) — using that as the working definition of "a real but modest gap,
-not noise" is a defensible, if non-arbitrary, choice, not a universal
-constant. Both values were proposed here and then actively adopted by the
-study owner rather than left as document defaults, which is what makes
-this table honestly pre-registered (4.4) rather than a value merely present
-in the document the author happened not to change.
+**Alpha and the RQ6 threshold, confirmed by the study owner (2026-09-08).**
+Alpha = 0.05 is the conventional default, not a value specific to this
+study. The RQ6 threshold of 5 percentage points sits at the same order of
+magnitude as the residual EN-vs-DE/ES gap this project's originating
+review found once the original repository's three scoring bugs were
+corrected (roughly 4-6 percentage points): using that as the working
+definition of "a real but modest gap, not noise" is a defensible,
+non-arbitrary choice, not a universal constant. Both values are
+pre-registered per 4.4.
 
 ### 10.4 Reliability/Consistency Metric
 
@@ -1004,22 +990,22 @@ not hidden.
 Multiple-comparison handling is fixed in advance rather than decided after
 seeing results: a primary comparison set — one test per RQ, corrected via
 Holm-Bonferroni — is selected before any result is seen. For RQ1, RQ2, and
-RQ6, the primary language is German, matching the continuity language
-carried over from the original review (README); the primary domain is
-whichever domain has the largest item count once the corpus is built —
-an objective, outcome-independent rule fixed now, rather than a specific
-domain name fixed before the corpus exists. RQ7's primary comparison is
-the full US/UK/AU triplet by definition, since that triplet is what RQ7
-tests; no language/domain selection is needed for it. **This paragraph's
-choice of German as the primary language was confirmed by the study owner
-on 2026-09-08, for the same reason given in 10.3.** Every other
-combination is reported descriptively as secondary/exploratory, clearly
-labelled as such, and is never used on its own to support a confirmatory
+RQ6, German is the primary language — confirmed by the study owner on
+2026-09-08 for the same reason given in 10.3, and matching the continuity
+language carried over from the original review (README); the primary
+domain is whichever domain has the largest item count once the corpus is
+built — an objective, outcome-independent rule fixed now, rather than a
+specific domain name fixed before the corpus exists. RQ7's primary
+comparison is the full US/UK/AU triplet by definition, since that triplet
+is what RQ7 tests; no language/domain selection is needed for it. Every
+other combination is reported descriptively as secondary/exploratory,
+clearly labelled as such, and is never used on its own to support a
+confirmatory
 claim.
 
 ### 10.6 RQ5 Risk-Threshold Framework
 
-Checked before writing this: neither the NIST AI Risk Management Framework
+Neither the NIST AI Risk Management Framework
 nor Article 15 of the EU AI Act specifies a fixed numeric accuracy or
 error-rate threshold for high-risk AI use. Both instead require a
 documented, purpose-specific accuracy level rather than a universal
@@ -1233,14 +1219,13 @@ first real run against this task, not a prerequisite for treating the
 scaffolding as done — and is tracked as ordinary pre-run verification, not
 as an open engineering gap.
 
-### 12.9 One Source Register Sign-Off Is Not Yet Tracked Where a Reviewer Would Look For It
+### 12.9 MGSM-Rev2 Share-Alike Legal Sign-Off
 
 The Source Register (5.4) flags MGSM-Rev2's CC BY-SA 4.0 share-alike
 obligation as requiring legal sign-off before any Set E or Set F
-derivative is generated from it. That flag currently exists only in a
-Source Register table cell; it is restated here, and in the Data
-Management Plan, so it is not lost the way a single-mention item can be.
-This sign-off is not yet obtained.
+derivative is generated from it. This sign-off has not yet been obtained.
+It is restated here and in the Data Management Plan so it is not lost as
+a single-mention item.
 
 ### 12.10 llama.cpp Containerisation (Resolved 2026-09-08); vLLM Still Not Built
 

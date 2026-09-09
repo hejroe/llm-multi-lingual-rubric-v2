@@ -7,15 +7,14 @@
 
 The study needs to run open-weight models locally, reproducibly, and
 across multiple model families (7). Ollama is the most widely deployed
-local runner among informal, casual deployments — relevant here because
-7.1's model-selection rationale is explicitly about real-world casual
-deployment risk, not only multilingual-specialist use. But Ollama's
-OpenAI-compatible endpoint omits `tool-choice`, `logprobs`, and
-`logit-bias` (confirmed directly against its own compatibility
-documentation, not assumed). llama.cpp's `llama-server` and vLLM both
+local runner among informal, casual deployments — relevant because 7.1's
+model-selection rationale concerns real-world casual deployment risk, not
+only multilingual-specialist use. Its OpenAI-compatible endpoint, however,
+omits `tool-choice`, `logprobs`, and `logit-bias`, per its own
+compatibility documentation. llama.cpp's `llama-server` and vLLM both
 expose a more complete OpenAI-compatible surface, including tool-calling
-parameters. LM Studio was considered and excluded outright as GUI-only,
-incompatible with unattended, container-based runs.
+parameters. LM Studio was excluded as GUI-only, incompatible with
+unattended, container-based runs.
 
 ## Decision
 

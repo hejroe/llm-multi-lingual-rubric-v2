@@ -25,12 +25,12 @@ docker compose run --rm eval lm_eval --model local-chat-completions \
 
 ## What's verified, and what isn't
 
-Verified directly (2026-09-08, against a real lm-evaluation-harness
-install, not assumed): the dataset loads correctly from the vendored TSVs
-via the `csv` loader with `column_names`/`delimiter` overrides; all 250
-rows per language load; `doc_to_text`/`doc_to_target` render correctly for
-German and Bengali (confirming both Latin and non-Latin script handling);
-a `generate_until` request constructs without error.
+Against a real lm-evaluation-harness install, the dataset loads correctly
+from the vendored TSVs via the `csv` loader with `column_names`/`delimiter`
+overrides; all 250 rows per language load; `doc_to_text`/`doc_to_target`
+render correctly for German and Bengali, covering both Latin and
+non-Latin script handling; a `generate_until` request constructs without
+error.
 
 Not yet verified: the full filter/scoring pipeline against a real model's
 output (needs a live backend — the pilot's first real run, not this

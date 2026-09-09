@@ -1,8 +1,8 @@
 # Data Management Plan
 
 **Status:** DRAFT
-**Version:** 0.3
-**Last updated:** 2026-09-08
+**Version:** 0.4
+**Last updated:** 2026-09-09
 **Companion to:** `STUDY_PROTOCOL.md` (referenced there at 5.7, 8.8, 9.7)
 
 ## 1. Purpose and Scope
@@ -40,19 +40,19 @@ corpus directory to be created under `data/` once item authoring begins —
 not yet built, since Section 5 and Appendix A are schema and starter
 content only at this stage.
 
-Version control: a local git repository has been initialised in this
-project folder (`git init`, default branch `main`, with a `.gitignore`
-excluding `results/` at volume per Section 6 below). It has not yet been
-committed to — do this from a native shell on the host machine (WSL2 or
-PowerShell), not through the Cowork device bridge: the bridge's mounted
-filesystem cannot delete files by default, and git's own lock/temp-file
-cleanup depends on that, so a stale `.git/index.lock` is left behind by
-every git command run through the bridge. This does not affect the
-repository's integrity, only where commands should be run from. A remote
-on a private repository host remains an open decision, deferred as before
-— local version control alone is enough to make every run's corpus/
-rubric/code version reconstructable per the versioning clauses already in
-the Protocol (5.8, 7.5, 8.8, 9.7); those version numbers are not
+Version control: a local git repository is initialised in this project
+folder (`git init`, default branch `main`, with a `.gitignore` excluding
+`results/` at volume per Section 6 below). As of 2026-09-09 it holds four
+commits, covering the initial protocol/governance set and the
+corpus-v0.1/v0.2 releases, with a clean working tree. Running git through
+the Cowork device bridge can leave a stale `.git/index.lock` behind, since
+the bridge's mounted filesystem cannot delete files by default; clearing
+that lock, or running git from a native shell on the host machine instead,
+resolves it without affecting repository integrity. A remote on a private
+repository host remains an open decision, deferred as before — local
+version control alone is enough to make every run's corpus/rubric/code
+version reconstructable per the versioning clauses already in the
+Protocol (5.8, 7.5, 8.8, 9.7); those version numbers are not
 reproducibility guarantees on their own without a matching commit to
 point to.
 

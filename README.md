@@ -104,15 +104,13 @@ none of them duplicate content the Protocol already states authoritatively.
      --limit 5 \
      --output_path /results/smoke_test_mmlu_prox_en
    ```
-   Two corrections from an earlier version of this example: the model is
-   now one actually in the registered candidate set (`docs/MODEL_REGISTER.md`)
-   rather than an 8B model explicitly excluded by size (Protocol 7.4); the
-   task targets MMLU-ProX rather than MGSM, because MMLU-ProX has a
-   working stock harness task (verified, Protocol 9.2).
-   `host.docker.internal` is correct here and unchanged — this project's
-   actual `docker/` setup runs Ollama natively on Windows, not as its own
-   containerised service (see `docker/Dockerfile`'s own header comment and
-   the `extra_hosts` entry in `docker-compose.yml`; Protocol 9.2 documents
+   The model used here is one of the registered candidates
+   (`docs/MODEL_REGISTER.md`), within the size band Protocol 7.4 sets. The
+   task targets MMLU-ProX, which has a working stock harness task
+   (Protocol 9.2). `host.docker.internal` is used because Ollama runs
+   natively on Windows in this project's setup, not as a containerised
+   service (see `docker/Dockerfile`'s header comment and the
+   `extra_hosts` entry in `docker-compose.yml`; Protocol 9.2 documents
    this).
 4. A parallel smoke test for MGSM-Rev2 (custom task, ADR 0008), once the
    corpus exists beyond Appendix A's starter content:
@@ -149,29 +147,27 @@ you inside WSL2, since the bridge this project folder is reached through
 does not have Docker available and cannot drive it directly.
 
 The Study Protocol is complete apart from its own front matter (Section 1,
-deferred by request) and its three previously-PROPOSED pre-registration
-values (alpha, RQ6 threshold, primary language) are now confirmed by the
-study owner (Protocol 10.3, 10.5). The two engineering gaps this project
-was tracking — a custom lm-evaluation-harness task for MGSM-Rev2
+deferred by request); its three pre-registration values (alpha, RQ6
+threshold, primary language) are confirmed by the study owner (Protocol
+10.3, 10.5). Two supporting pieces of infrastructure exist: a custom
+lm-evaluation-harness task for MGSM-Rev2
 (`configs/lm_eval_tasks/mgsm_rev2/`, ADR 0008) and a containerised
 llama.cpp backend with GPU passthrough for Set D
-(`docker/docker-compose.yml`'s `llamacpp` service) — are now built and
-documented (Protocol 9.2, Limitations 12.8 and 12.10). Neither has been
-run end-to-end against a live model yet; that is ordinary pre-run
-verification, not remaining engineering.
+(`docker/docker-compose.yml`'s `llamacpp` service), both documented at
+Protocol 9.2 and Limitations 12.8/12.10. Neither has been run end-to-end
+against a live model yet — that is ordinary pre-run verification,
+remaining before the pilot's first real run.
 
 Corpus/item authoring has started: `corpus/v0.1/` (2026-09-08) holds the
 first real corpus release across all six item families; `corpus/v0.2/`
 (2026-09-09) supersedes v0.1's Set B and Set C only — expanded from one
 fact each to ten, every fact independently source-verified, and
 translated into German, Swahili and Bengali (candidate translations,
-pending review). Both versions' own README states exactly what's
-verified, what's a candidate pending review, and what's a scoping choice
-rather than an oversight. This folder is now under local git version
-control (`.gitignore` excludes `results/` at volume); run `git` commands
-from a native WSL2 or PowerShell shell on this machine, not through the
-Cowork device bridge (see `DATA_MANAGEMENT_PLAN.md` Section 3 for why).
-Known open items are tracked where they arise rather than repeated here:
-see
+pending review). Each version's own README states what's verified, what's
+a candidate pending review, and what's a scoping choice rather than an
+oversight. This folder is under local git version control (`.gitignore`
+excludes `results/` at volume); as of 2026-09-09 it holds four commits
+with a clean working tree (`DATA_MANAGEMENT_PLAN.md` Section 3). Known
+open items are tracked where they arise rather than repeated here: see
 `STUDY_PROTOCOL.md` Section 12 (Limitations) and
 `DATA_MANAGEMENT_PLAN.md` Sections 3, 5, and 6.

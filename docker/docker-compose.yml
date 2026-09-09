@@ -11,8 +11,7 @@
 # running under native Docker Engine on WSL2 (Docker Desktop provides this
 # mapping automatically; native Docker Engine does not, so we add it here).
 # Ollama itself runs natively on Windows, not as a service in this file — see
-# docs/STUDY_PROTOCOL.md Section 9.2 for why (corrected there after review;
-# this compose file's shape is what's actually built, not the other way round).
+# docs/STUDY_PROTOCOL.md Section 9.2 for why.
 #
 # The `llamacpp` service below is the one exception: it DOES run
 # containerised, with GPU passthrough, and IS reached via compose

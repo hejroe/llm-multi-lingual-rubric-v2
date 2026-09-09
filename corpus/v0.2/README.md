@@ -34,12 +34,9 @@ that limitation and this release doesn't change it — only that the
 tests can now be demonstrated running on real, varied data rather than a
 single toy case.
 
-## Provenance — Set B (10 facts, all newly verified 2026-09-09)
+## Provenance — Set B (10 facts, sourced 2026-09-09)
 
-Every fact was checked against a primary or authoritative near-primary
-source before being written into the corpus (WebSearch to locate the
-source, WebFetch to read and confirm the specific figure/date directly),
-not assumed from training knowledge:
+Each fact is drawn from a primary or authoritative near-primary source:
 
 | Fact | Jurisdictions compared | Primary source(s) |
 |---|---|---|
@@ -66,10 +63,10 @@ STUDY_PROTOCOL.md` 11.4, per Protocol 5.5's requirement for every Set B
 item) and signed off by the study owner (hejroe, 2026-09-09) — the same
 treatment as the existing alcohol-age item.
 
-## Provenance — Set C (10 facts, all newly verified 2026-09-09)
+## Provenance — Set C (10 facts, sourced 2026-09-09)
 
 Each fact has a clean single-variable change with a specific commencement
-date, checked directly against a primary or authoritative source:
+date, drawn from a primary or authoritative source:
 
 | Fact | Change | Effective date | Source |
 |---|---|---|---|
@@ -96,8 +93,8 @@ Every non-English row in `set_b.csv` and `set_c.csv` carries
 `review_status: candidate-translation`, matching the caution the Study
 Protocol already applies to hand-authored non-English content (Appendix
 A.3's Swahili/Bengali IDK markers are flagged the same way). These
-translations were drafted by the assistant, not a native speaker, and
-are not yet independently reviewed. `gold_answer`, `effective_from`/
+translations are machine-drafted, not produced or reviewed by a native
+speaker. `gold_answer`, `effective_from`/
 `effective_until`, and `source_citation` are deliberately left
 untranslated across all language variants of a fact — the same
 convention already used in `set_a.csv` — since these fields serve as the

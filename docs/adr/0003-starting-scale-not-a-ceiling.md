@@ -5,10 +5,9 @@
 
 ## Context
 
-Corpus size (5.1), the language set (6.5), and the model set (7.1) were
-each, at one point during protocol drafting, read as fixed sampling
-limitations — a cap on what the method could support. That framing was
-identified and corrected during review.
+Corpus size (5.1), the language set (6.5), and the model set (7.1) could
+each be misread as fixed sampling limitations — a cap on what the method
+can support, rather than a starting point for it.
 
 ## Decision
 

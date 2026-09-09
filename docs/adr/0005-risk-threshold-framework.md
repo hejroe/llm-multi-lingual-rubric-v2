@@ -5,11 +5,11 @@
 
 ## Context
 
-An early draft considered stating a fixed accuracy threshold (e.g. "below
-X% is high-risk") for RQ5's risk framing. Checked directly against the
-NIST AI Risk Management Framework and EU AI Act Article 15: both require a
-documented, context-specific accuracy level judged by likelihood ×
-severity/impact, not a universal numeric cutoff.
+A fixed accuracy threshold (e.g. "below X% is high-risk") was considered
+for RQ5's risk framing and rejected: both the NIST AI Risk Management
+Framework and EU AI Act Article 15 require a documented, context-specific
+accuracy level judged by likelihood × severity/impact, not a universal
+numeric cutoff.
 
 ## Decision
 

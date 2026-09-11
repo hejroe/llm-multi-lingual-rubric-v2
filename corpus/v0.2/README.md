@@ -87,25 +87,19 @@ The National Living Wage fact is deliberately fixed to a single age band
 age keeps the gold answer a single clean rate change rather than
 conflating two variables (rate and eligibility) in one question.
 
-## Translations (German, Swahili, Bengali) — candidate, pending review
+## Translations (German, Swahili, Bengali) — reviewed 2026-09-11
 
 Every non-English row in `set_b.csv` and `set_c.csv` carries
-`review_status: candidate-translation`, matching the caution the Study
-Protocol already applies to hand-authored non-English content (Appendix
-A.3's Swahili/Bengali IDK markers are flagged the same way). These
-translations are machine-drafted, not produced or reviewed by a native
-speaker. `gold_answer`, `effective_from`/
+`review_status: translation-reviewed`. These translations were
+machine-drafted and have since been reviewed by the study owner
+(hejroe, 2026-09-11), the same review applied to Appendix A.3's
+Swahili/Bengali IDK markers. `gold_answer`, `effective_from`/
 `effective_until`, and `source_citation` are deliberately left
 untranslated across all language variants of a fact — the same
 convention already used in `set_a.csv` — since these fields serve as the
 canonical reference for scoring regardless of the language a model was
 queried in, and translating them repeatedly across three languages adds
 translation-error surface for no scoring benefit.
-
-Until reviewed, treat non-English Set B/C rows as candidates for
-face-validity and pipeline testing, not as verified equivalents of their
-English originals for reportable results — the same standard already
-applied to Set E before its human-review sign-off.
 
 ## Files
 
@@ -119,8 +113,6 @@ applied to Set E before its human-review sign-off.
 
 ## Still open
 
-- Non-English Set B/C content needs native-speaker review before being
-  treated as equivalent to the English originals.
 - Ten facts per family is enough to demonstrate the statistical methods
   running on real data — it is not full statistical power for a
   confirmatory RQ2/RQ3 claim (Protocol 12.2 already states this

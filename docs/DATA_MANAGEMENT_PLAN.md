@@ -1,8 +1,8 @@
 # Data Management Plan
 
 **Status:** DRAFT
-**Version:** 0.4
-**Last updated:** 2026-09-09
+**Version:** 0.5
+**Last updated:** 2026-09-11
 **Companion to:** `STUDY_PROTOCOL.md` (referenced there at 5.7, 8.8, 9.7)
 
 ## 1. Purpose and Scope
@@ -42,18 +42,18 @@ content only at this stage.
 
 Version control: a local git repository is initialised in this project
 folder (`git init`, default branch `main`, with a `.gitignore` excluding
-`results/` at volume per Section 6 below). As of 2026-09-09 it holds four
-commits, covering the initial protocol/governance set and the
-corpus-v0.1/v0.2 releases, with a clean working tree. Running git through
-the Cowork device bridge can leave a stale `.git/index.lock` behind, since
-the bridge's mounted filesystem cannot delete files by default; clearing
-that lock, or running git from a native shell on the host machine instead,
-resolves it without affecting repository integrity. A remote on a private
-repository host remains an open decision, deferred as before — local
-version control alone is enough to make every run's corpus/rubric/code
-version reconstructable per the versioning clauses already in the
-Protocol (5.8, 7.5, 8.8, 9.7); those version numbers are not
-reproducibility guarantees on their own without a matching commit to
+`results/` at volume per Section 6 below), with a clean working tree as
+of 2026-09-11. Running git through the Cowork device bridge can leave a
+stale `.git/index.lock` behind, since the bridge's mounted filesystem
+cannot delete files by default; clearing that lock, or running git from
+a native shell on the host machine instead, resolves it without
+affecting repository integrity. GitHub and GitLab remotes are confirmed
+(Section 5) as the public-release and backup destination (Section 6) —
+local version control alone would otherwise be enough to make every
+run's corpus/rubric/code version reconstructable per the versioning
+clauses already in the Protocol (5.8, 7.5, 8.8, 9.7); those version
+numbers are not reproducibility guarantees on their own without a
+matching commit to
 point to.
 
 Backup: no automated backup is currently configured. See Section 6 — this
@@ -75,25 +75,26 @@ that obligation forward to any derivative Set E/F items built from them
 (9.4) — stated in the Protocol and repeated here because it governs what
 CAN be shared, not only what should be.
 
-Default intended licence for this project's own original content (rubric,
-protocol text, and code) is CC BY 4.0 for documentation and data, and an
-OSI-approved permissive licence (e.g. MIT or Apache-2.0) for code — this is
-a working assumption pending the study owner's formal confirmation, **not
-yet applied to the repository**.
+Licence for this project's own original content, confirmed by the study
+owner (hejroe, 2026-09-11) and applied to the repository: CC BY 4.0 for
+documentation and data, MIT for code (repository root `LICENSE`).
 
-Planned release point: alongside eventual publication or public write-up,
-not before. During the pilot the project remains private.
+MGSM-Rev2's CC BY-SA 4.0 share-alike obligation (Source Register,
+Protocol 5.4) required sign-off before any Set E or Set F derivative
+built from it could be generated or released. The study owner has
+determined that this project's own open publication under CC BY 4.0
+satisfies that obligation; no separate CC BY-SA 4.0 carve-out is applied
+to MGSM-Rev2-derived items (Protocol 12.9).
 
-One release-blocking item, separate from the licence/repository decisions
-above: MGSM-Rev2's CC BY-SA 4.0 share-alike obligation (Source Register,
-Protocol 5.4) requires legal sign-off before any Set E or Set F derivative
-built from it is generated or released — not yet obtained (Protocol
-12.9).
+Planned release point: alongside eventual publication or public
+write-up, not before. During the pilot the project remains private.
 
-Planned repository for public release: **not yet selected**. OSF and
-Zenodo are the two realistic candidates — both support versioned deposits
-and a citable DOI. This is stated as an open decision, not defaulted
-either way.
+Repository for public release, confirmed by the study owner (2026-09-11):
+GitHub and GitLab, both mirroring the same history. This differs from
+OSF/Zenodo, which additionally offer a versioned deposit with a citable
+DOI — the study owner has confirmed GitHub/GitLab as sufficient for now;
+a DOI-citable deposit remains available later if formal citation is
+needed.
 
 ## 6. Retention, Backup, and Long-Term Preservation
 
@@ -103,14 +104,13 @@ five-year figure follows common institutional research-data-retention
 practice and is stated here as a working assumption, not a rule specific
 to this project.
 
-Backup: **not currently configured**. This is the most consequential open
-item in this plan — raw model responses (Section 9) are the most
-expensive artefact to regenerate, since regenerating them requires live
-inference runs, and they currently exist only on the project owner's
-machine. Recommended minimum: the version-control remote in Section 3
-doubling as backup for corpus, code, and protocol text, plus a separate
-backup destination for the raw-response JSONL files, which do not belong
-in git history at volume.
+Backup, confirmed by the study owner (2026-09-11): the GitHub and GitLab
+remotes (Section 5) serve as off-machine backup for corpus, code, and
+protocol text, alongside the local machine copy. Raw model responses
+(Section 9) are the most expensive artefact to regenerate, since
+regenerating them requires live inference runs, and they do not belong in
+git history at volume; a separate backup destination for the raw-response
+JSONL files, once runs exist to back up, remains open.
 
 Responsible party: the study owner. This project has no other named
 collaborators at pilot stage, beyond the named reviewer(s) assigned to the

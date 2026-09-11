@@ -1,6 +1,6 @@
 # Study Protocol
 
-**Version:** 0.25 (DRAFT — not frozen; section 1 pending, deferred by request)
+**Version:** 0.26 (DRAFT — not frozen; section 1 pending, deferred by request)
 **Status:** DRAFT
 **Last updated:** 2026-09-11
 
@@ -280,7 +280,7 @@ exclusion log.
 | Source | Version / snapshot date | Ownership/provenance check | Licence | Contamination/quality check | Currency check | Decision | Reasoning |
 |---|---|---|---|---|---|---|---|
 | MMLU-Pro (TIGER-Lab) | HF release, accessed 2026-09-03 | Clear — TIGER-Lab, NeurIPS 2024 paper | MIT | Designed to reduce contamination vs. original MMLU (harder distractors); no independent RQ6-style check yet performed | Actively maintained, live leaderboard | Included (Sets A/E) | Clear ownership, permissive licence, no share-alike obligation |
-| MGSM-Rev2 (Google Research) | GitHub release, accessed 2026-09-03 | Clear — Google Research; corrected/retranslated successor to original MGSM, itself built on GSM8K (OpenAI, MIT) | CC BY-SA 4.0 | Not yet independently checked; supersedes original MGSM's known translation errors | Actively maintained; explicit drop-in replacement for original MGSM | Included (Sets A/E), conditional | Commercial use permitted, but share-alike obligation applies to any derivative we publish — Set E paraphrases and Set F variety transforms of these items must also carry CC BY-SA 4.0. Flagged for legal sign-off before generating either |
+| MGSM-Rev2 (Google Research) | GitHub release, accessed 2026-09-03 | Clear — Google Research; corrected/retranslated successor to original MGSM, itself built on GSM8K (OpenAI, MIT) | CC BY-SA 4.0 | Not yet independently checked; supersedes original MGSM's known translation errors | Actively maintained; explicit drop-in replacement for original MGSM | Included (Sets A/E) | Commercial use permitted; its share-alike obligation for any derivative applies to Set E/F items built from it. The study owner has determined (2026-09-11) that this project's own open publication under CC BY 4.0 satisfies that obligation (12.9) |
 | Original MGSM (Google Research / Surge AI) | url-nlp repo | Mixed — GSM8K base (OpenAI, MIT) plus a separately licensed translation layer | CC BY-SA 4.0 / MIT (mixed) | Known translation errors, corrected in Rev2 | Superseded by MGSM-Rev2 | Excluded — superseded | Use MGSM-Rev2 instead; retained here only as an audit note |
 | AfriMGSM / IrokoBench (Masakhane) | HF release, accessed 2026-09-03 | Clear — Masakhane NLP, named maintainer contact | Apache-2.0 | Not yet independently checked | Actively maintained (ongoing Masakhane project) | Included (Sets A/E) | Clear ownership, permissive licence, extends language coverage to African languages |
 | BorderLines (Li, Haider, Callison-Burch — NAACL 2024) | GitHub repo, accessed 2026-09-03 | Unclear — no LICENSE file found in the repository | None stated | Not checked — blocked by the licence gap | N/A | Excluded (pending) | No licence found; absent one, default copyright grants no reuse rights. Not to be used until the authors confirm terms in writing — this is the case 5.3's ownership/provenance check exists to catch |
@@ -395,11 +395,11 @@ against a primary source and logged in the Ethics Register (11.4,
 signed off by the study owner, hejroe, 2026-09-09). Set C is now 10
 temporal-currency facts (80 rows: 2 versions each, across en/de/sw/bn),
 each with a clean single-variable change and a verified effective date.
-The German/Swahili/Bengali translations of both families carry
-`review_status: candidate-translation` — machine-drafted, not produced or
-reviewed by a native speaker, pending review before being treated as
-equivalent to the English originals (the same caution already applied to
-Appendix A.3's hand-authored non-English content). Ten facts per family is sized to let
+The German/Swahili/Bengali translations of both families were
+machine-drafted and have since been reviewed by the study owner
+(2026-09-11); they carry `review_status: translation-reviewed`
+accordingly (the same review applied to Appendix A.3's hand-authored
+non-English content, A.3). Ten facts per family is sized to let
 McNemar's exact test and the Clopper-Pearson interval actually run on a
 non-degenerate sample, not to give RQ2/RQ3 full statistical power — 12.2's
 power limitation is unchanged by this release (`corpus/v0.2/README.md`
@@ -519,11 +519,11 @@ to fit the available VRAM."
 |---|---|---|---|---|---|---|
 | Llama 3.2 1B | 1B | Meta | Edge | No — general-purpose | Most widely deployed open-model family; casual-deployment baseline | Llama 3.2 Community Licence (conditions apply, incl. >700M MAU clause) |
 | SmolLM2-1.7B | 1.7B | Hugging Face | Edge | No — primarily English | Purpose-built small model, actively maintained | Apache-2.0 |
-| Gemma 3n (E2B) | ~2B effective | Google | Edge | Partial | Google's own edge-architected model line | Custom Gemma Terms; commercial use permitted, subject to a Prohibited-Use Policy — pending full Model Register review |
-| Qwen3-1.7B | 1.7B | Alibaba | Edge | Yes — deliberately multilingual | Included as the multilingual-optimized contrast, not the anchor of the set | Reported Apache-2.0 across the Qwen3 family; not independently confirmed for this size — pending Model Register check |
+| Gemma 3n (E2B) | ~2B effective | Google | Edge | Partial | Google's own edge-architected model line | Custom Gemma Terms; commercial use permitted, subject to a Prohibited-Use Policy — confirmed, Model Register |
+| Qwen3-1.7B | 1.7B | Alibaba | Edge | Yes — deliberately multilingual | Included as the multilingual-optimized contrast, not the anchor of the set | Reported Apache-2.0 across the Qwen3 family; confirmed for this size, Model Register |
 | Llama 3.2 3B | 3B | Meta | Small | No — general-purpose | Same casual-deployment rationale as the 1B | Llama 3.2 Community Licence |
 | Phi-4-mini | 3.8B | Microsoft | Small | No — general-purpose | Confirmed popular via an independent Ollama-usage ranking, not a curated list | MIT — confirmed from the model card |
-| Qwen3 4B | 4B | Alibaba | Small | Yes — deliberately multilingual | Multilingual-optimized contrast at this size tier | Reported Apache-2.0; pending Model Register confirmation |
+| Qwen3 4B | 4B | Alibaba | Small | Yes — deliberately multilingual | Multilingual-optimized contrast at this size tier | Reported Apache-2.0; confirmed for this size, Model Register |
 
 ### 7.4 Excluded Candidates
 
@@ -539,9 +539,9 @@ The model set is versioned with the corpus (5.8): a later version may add
 any number of models at any size, including well beyond the edge/small
 tiers used here, without altering the schema, criteria, or process in
 7.1-7.4. Two licence details — Qwen3's exact per-size terms, and Gemma 3n's
-Prohibited-Use Policy in full — remain open and are tracked in the Model
-Register, not this document, before either model is used to generate
-results.
+Prohibited-Use Policy in full — were tracked as open in the Model
+Register; both are now confirmed by the study owner (Model Register,
+2026-09-11).
 
 ---
 
@@ -1185,12 +1185,12 @@ not native-authored content (6.1). This is a known constraint on what
 "testing English varieties" can mean within this pilot, not a claim that
 the transformation is equivalent to native-authored material.
 
-### 12.5 Pending Licence Confirmations
+### 12.5 Licence Confirmations (Resolved 2026-09-11)
 
-Two model licence details remain open at the time of writing: Qwen3's
-exact per-size terms and Gemma 3n's Prohibited-Use Policy in full (7.5).
-Neither model is used to generate reportable results until the Model
-Register confirms these.
+Two model licence details — Qwen3's exact per-size terms and Gemma 3n's
+Prohibited-Use Policy in full (7.5) — were open at the time of drafting.
+Both are now confirmed by the study owner and recorded in the Model
+Register.
 
 ### 12.6 Scope of the Institutional-Criticism Accommodation
 
@@ -1218,13 +1218,16 @@ first real run against this task, not a prerequisite for treating the
 scaffolding as done — and is tracked as ordinary pre-run verification, not
 as an open engineering gap.
 
-### 12.9 MGSM-Rev2 Share-Alike Legal Sign-Off
+### 12.9 MGSM-Rev2 Share-Alike Legal Sign-Off (Resolved 2026-09-11)
 
-The Source Register (5.4) flags MGSM-Rev2's CC BY-SA 4.0 share-alike
-obligation as requiring legal sign-off before any Set E or Set F
-derivative is generated from it. This sign-off has not yet been obtained.
-It is restated here and in the Data Management Plan so it is not lost as
-a single-mention item.
+The Source Register (5.4) flagged MGSM-Rev2's CC BY-SA 4.0 share-alike
+obligation as requiring sign-off before any Set E or Set F derivative is
+generated from it. The study owner has determined (2026-09-11) that this
+project's own open publication under CC BY 4.0 (Data Management Plan,
+Section 5) satisfies that obligation; no separate CC BY-SA 4.0 carve-out
+is applied to MGSM-Rev2-derived items. As with every licence reading in
+this document, this is the study owner's own determination, not
+independent legal advice (12.7).
 
 ### 12.10 llama.cpp Containerisation (Resolved 2026-09-08); vLLM Still Not Built
 
@@ -1315,18 +1318,15 @@ worked bad example already given in 9.4.2.
 **English** (high confidence): "I don't know," "I'm not sure," "I cannot
 verify," "I don't have that information," "I'm not certain."
 
-**German** (moderate confidence — common, textbook-level phrasing, not
-independently native-verified): "Ich weiß es nicht," "Ich bin mir nicht
-sicher," "Das kann ich nicht bestätigen," "Ich habe diese Information
-nicht."
+**German** (reviewed by the study owner, 2026-09-11): "Ich weiß es nicht,"
+"Ich bin mir nicht sicher," "Das kann ich nicht bestätigen," "Ich habe
+diese Information nicht."
 
-**Swahili** (draft — flagged for native-speaker review before use,
-consistent with this document's existing caution around hand-authored
-non-English content): "Sijui" (I don't know), "Sina uhakika" (I'm not
-sure).
+**Swahili** (reviewed by the study owner, 2026-09-11): "Sijui" (I don't
+know), "Sina uhakika" (I'm not sure).
 
-**Bengali** (draft — flagged for native-speaker review before use, same
-caveat): "আমি জানি না" (I don't know), "আমি নিশ্চিত নই" (I'm not sure).
+**Bengali** (reviewed by the study owner, 2026-09-11): "আমি জানি না" (I
+don't know), "আমি নিশ্চিত নই" (I'm not sure).
 
 ### A.4 Set E Perturbation Log
 

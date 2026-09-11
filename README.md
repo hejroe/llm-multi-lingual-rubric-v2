@@ -32,12 +32,12 @@ one file. Read in this order:
    every section written except the formal title/front matter (Section 1,
    deferred by request).
 2. **[`docs/DATA_MANAGEMENT_PLAN.md`](docs/DATA_MANAGEMENT_PLAN.md)** —
-   where the data this study produces will live, for how long, and under
-   what licence. This project is now under local git version control; its
-   remaining open items (no off-machine backup yet, no licence or release
-   repository chosen yet) are stated plainly there — none of them block
-   running the pilot locally; they matter once results are meant to be
-   archived, shared, or cited, not before.
+   where the data this study produces lives, for how long, and under what
+   licence. This project is under local git version control with GitHub
+   and GitLab remotes, which serve as both the public-release repository
+   and off-machine backup (DMP Sections 5, 6). The licence (CC BY 4.0 for
+   documentation/data, MIT for code, repository root `LICENSE`) is
+   applied.
 3. **[`docs/adr/`](docs/adr/)** — one-page Architecture Decision Records:
    why a specific design choice was made (backend abstraction, statistical
    test selection, pilot scale, contested-claims scoring, risk framing,
@@ -49,8 +49,8 @@ one file. Read in this order:
    for anyone actually applying or auditing the scoring by hand.
 5. **[`docs/MODEL_REGISTER.md`](docs/MODEL_REGISTER.md)** — the licence,
    ownership, and currency vetting record for every candidate model
-   (included or excluded), and the authoritative place the two pending
-   licence confirmations (7.5, 12.5) get marked resolved.
+   (included or excluded). All candidate models are licence-confirmed
+   (7.5, 12.5).
 
 Each document versions independently (stated at its own head) but cross-
 references the others where a decision or definition lives elsewhere —
@@ -162,12 +162,13 @@ Corpus/item authoring has started: `corpus/v0.1/` (2026-09-08) holds the
 first real corpus release across all six item families; `corpus/v0.2/`
 (2026-09-09) supersedes v0.1's Set B and Set C only — expanded from one
 fact each to ten, every fact independently source-verified, and
-translated into German, Swahili and Bengali (candidate translations,
-pending review). Each version's own README states what's verified, what's
-a candidate pending review, and what's a scoping choice rather than an
-oversight. This folder is under local git version control (`.gitignore`
-excludes `results/` at volume); as of 2026-09-09 it holds four commits
-with a clean working tree (`DATA_MANAGEMENT_PLAN.md` Section 3). Known
-open items are tracked where they arise rather than repeated here: see
-`STUDY_PROTOCOL.md` Section 12 (Limitations) and
-`DATA_MANAGEMENT_PLAN.md` Sections 3, 5, and 6.
+translated into German, Swahili and Bengali (translations reviewed by the
+study owner, 2026-09-11). Each version's own README states what's
+verified and what's a scoping choice rather than an oversight. This
+folder is under local git version control (`.gitignore` excludes
+`results/` at volume) with a clean working tree, and GitHub/GitLab
+remotes for public release and backup (`DATA_MANAGEMENT_PLAN.md`
+Sections 3, 5, 6). Known open items are tracked where they arise rather
+than repeated here: see `STUDY_PROTOCOL.md` Section 12 (Limitations) and
+`DATA_MANAGEMENT_PLAN.md` Section 6 (raw-response backup, once runs
+exist to back up).

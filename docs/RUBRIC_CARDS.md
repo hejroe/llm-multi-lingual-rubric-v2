@@ -113,9 +113,8 @@ against that item's language's marker list?
 
 **Worked example (Swahili, illustrative):** response "Sijui" to an item
 with a specific factual gold answer — IDK, provided the Swahili marker
-list is applied (that list is still draft, pending native-speaker review
-per Appendix A.3, and this dependency should be kept in view rather than
-assumed settled).
+list is applied (that list is reviewed by the study owner, Appendix
+A.3).
 
 **Common confusion — resolved at the decision-logic level (8.4 step 4):**
 a hedge embedded in an otherwise confidently wrong answer ("It's probably

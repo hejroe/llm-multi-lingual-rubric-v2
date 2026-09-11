@@ -18,4 +18,4 @@ model for reportable results).
 
 This step — actually placing a model file here — is deliberately left to
 you, the same way Ollama's own model pulls are (README.md Prerequisites):
-not something to bake into the repository or automate silently.
+not something to bake into the repository or automate.

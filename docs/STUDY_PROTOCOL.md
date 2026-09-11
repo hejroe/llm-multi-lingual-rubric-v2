@@ -1,10 +1,10 @@
 # Study Protocol
 
-**Version:** 0.24 (DRAFT — not frozen; section 1 pending, deferred by request)
+**Version:** 0.25 (DRAFT — not frozen; section 1 pending, deferred by request)
 **Status:** DRAFT
-**Last updated:** 2026-09-09
+**Last updated:** 2026-09-11
 
-Amendments after freeze are logged in Section 13, not made silently.
+Amendments after freeze are logged in Section 13.
 
 ---
 
@@ -217,7 +217,7 @@ downstream interpretive judgement built from the other RQs' results
 
 These hypotheses are part of what gets fixed before the pilot runs, per
 this document's header. Any change to a stated hypothesis after that point
-is logged in Section 13 as an amendment, never edited silently.
+is logged in Section 13 as an amendment.
 
 ---
 
@@ -469,8 +469,7 @@ languages:
 ### 6.5 Versioning
 
 The language and variety set expands the same way the corpus does (5.8): by
-a new corpus version, never by silent edit. The set above is the starting
-point, not a ceiling.
+a new corpus version. The set above is the starting point, not a ceiling.
 
 ---
 
@@ -776,7 +775,7 @@ its infrastructure exists; it remains available as a substitute for
 llama.cpp if needed, not yet a built alternative. A GGUF model file must
 still be placed in `models/` before the `llamacpp` service can actually
 serve requests (`models/README.md`) — deliberately a manual step, the same
-way Ollama's own model pulls are, not something to automate silently.
+way Ollama's own model pulls are.
 `scripts/check_llamacpp_connectivity.sh` mirrors the existing Ollama
 connectivity check and should be run before any Set D session.
 
@@ -1036,7 +1035,7 @@ the capability metrics in 10.3.
 Analysis code is versioned alongside the corpus, model, rubric, and
 environment versions (5.8, 7.5, 8.8, 9.7). A change to analysis method
 after the confirmatory RQs are fixed is logged as an amendment (Section
-13), never a silent re-run.
+13).
 
 ---
 
@@ -1248,7 +1247,7 @@ be run — a manual, deliberately-not-automated step, not an engineering gap.
 ### 13.1 Purpose
 
 Per this document's header, amendments made after the protocol is frozen
-are logged here, not made silently. Everything recorded in this document
+are logged here. Everything recorded in this document
 up to and including its current version is ordinary pre-freeze drafting —
 revision during design, not amendment — and none of it is logged here on
 that basis.
@@ -1271,7 +1270,7 @@ separate from the procedures that generate and apply them (9.4, 8.6), per
 the separation-of-concerns principle established earlier in this document.
 Entries here are illustrative starter content for this pilot, not an
 exhaustive production list; expanding them is a corpus-version change
-(5.8), not a silent edit to this appendix's existing entries.
+(5.8), not an edit to this appendix's existing entries.
 
 ### A.2 Set F Conversion Lists
 

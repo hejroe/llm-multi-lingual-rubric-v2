@@ -28,6 +28,6 @@ exercise the parameters RQ4 needs to test.
 
 Set D results are not directly comparable to same-model results run under
 Ollama for the other sets, since the backend itself differs — this is
-stated as a limitation (12), not absorbed silently into the results.
+stated as a limitation (12).
 Adding a new backend later only requires it to speak the OpenAI-compatible
 chat-completions schema; no other part of the pipeline is backend-specific.

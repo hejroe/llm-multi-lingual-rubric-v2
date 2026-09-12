@@ -1,0 +1,8 @@
+# Local development dependencies for scoring/ and analysis/ (run directly
+# with plain Python, not inside the docker/ image -- that image only runs
+# lm-evaluation-harness itself; see docker/Dockerfile).
+#
+#   pip install -r requirements.txt
+#   python -m pytest
+pytest
+scipy

@@ -107,12 +107,74 @@ def infer_backend(base_url: str) -> str:
     return "unknown"
 
 
+def fetch_ollama_digest(model_name: str, ollama_url: str = "http://localhost:11434") -> str | None:
+    """Query Ollama's own `/api/tags` for `model_name`'s digest directly —
+    Ollama runs natively on Windows in this project's setup and, once
+    bound to all interfaces (docker-compose.yml's header comment), is
+    reachable from plain local Python with no container involved, so
+    there's no reason to make the operator run `ollama list` and copy-paste
+    a value by hand (5.7/9.6 want a model digest per run; automating its
+    collection is more reliable than manual transcription too). Returns
+    `None` — not an error — if Ollama isn't reachable or the model isn't
+    listed: a digest is a nice-to-have provenance enrichment, not a hard
+    requirement to be able to score a run at all.
+    """
+    import urllib.error
+    import urllib.request
+
+    try:
+        with urllib.request.urlopen(f"{ollama_url}/api/tags", timeout=5) as response:
+            data = json.load(response)
+    except (urllib.error.URLError, OSError, json.JSONDecodeError, TimeoutError):
+        return None
+    for model in data.get("models", []):
+        if model.get("name") == model_name or model.get("model") == model_name:
+            return model.get("digest")
+    return None
+
+
+def compute_gguf_digest(gguf_path: Path) -> str | None:
+    """SHA256 of the exact GGUF file in use — llama.cpp-served models have
+    no Ollama-style digest to query instead, and a computed hash of the
+    actual file is more rigorous than a manually-typed value a operator
+    might mistype or forget to update after swapping models (5.7/9.6).
+    Returns `None` (not an error) if the file doesn't exist — same
+    nice-to-have-not-required reasoning as `fetch_ollama_digest`.
+    """
+    import hashlib
+
+    if not gguf_path.is_file():
+        return None
+    hasher = hashlib.sha256()
+    with open(gguf_path, "rb") as f:
+        for chunk in iter(lambda: f.read(1024 * 1024), b""):
+            hasher.update(chunk)
+    return hasher.hexdigest()
+
+
+def auto_detect_model_digest(
+    model_name: str, backend: str, *, ollama_url: str = "http://localhost:11434", gguf_path: Path | None = None
+) -> str | None:
+    """Dispatch to whichever automatic digest lookup applies for `backend`
+    — the single entry point `scoring.cli` calls so a digest is filled in
+    automatically whenever possible, per this project's own "automate as
+    much as possible, don't burden the user unnecessarily" principle
+    (2026-09-12), rather than defaulting to manual entry.
+    """
+    if backend == "ollama":
+        return fetch_ollama_digest(model_name, ollama_url=ollama_url)
+    if backend == "llamacpp":
+        return compute_gguf_digest(gguf_path or Path("models/model.gguf"))
+    return None
+
+
 def provenance_from_aggregated_results(
     aggregated_results_path: Path,
     *,
     corpus_version: str,
     model_digest: str | None = None,
     reasoning_mode: str | None = None,
+    replicate_index: int | None = None,
 ) -> RunProvenance:
     """Build a RunProvenance from lm-eval-harness's own aggregated
     `results_*.json` (sibling to the `samples_*.jsonl` file), which carries

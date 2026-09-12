@@ -125,11 +125,14 @@ def test_provenance_from_aggregated_results(tmp_path):
     path = tmp_path / "results_2026-01-01.json"
     path.write_text(json.dumps(aggregated), encoding="utf-8")
 
-    provenance = provenance_from_aggregated_results(path, corpus_version="v0.2", model_digest="abc123")
+    provenance = provenance_from_aggregated_results(
+        path, corpus_version="v0.2", model_digest="abc123", reasoning_mode="disabled"
+    )
     assert provenance.model_name == "llama3.2:1b"
     assert provenance.backend == "ollama"
     assert provenance.corpus_version == "v0.2"
     assert provenance.model_digest == "abc123"
+    assert provenance.reasoning_mode == "disabled"
 
 
 def test_write_scored_jsonl_round_trips(tmp_path):

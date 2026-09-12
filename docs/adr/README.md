@@ -23,3 +23,4 @@ elsewhere in this project (`STUDY_PROTOCOL.md` Section 13).
 | [0007](0007-tool-calling-simulated-and-live-modes.md) | RQ4 tool-calling supports both simulated and live modes | Accepted |
 | [0008](0008-mgsm-rev2-custom-task.md) | Build a custom harness task for MGSM-Rev2 rather than using the stock MGSM task | Accepted |
 | [0009](0009-custom-corpus-harness-tasks.md) | Build custom harness tasks reading the curated corpus directly for Sets A, B, C, E, F | Accepted |
+| [0010](0010-qwen3-reasoning-mode-both-conditions.md) | Test Qwen3 in both non-reasoning and reasoning mode, as separate conditions | Accepted |

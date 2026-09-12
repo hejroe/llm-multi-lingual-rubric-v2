@@ -49,6 +49,7 @@ class RunProvenance:
     model_digest: str | None = None  # not recoverable from harness output; supply from `ollama list`
     param_overrides: str | None = None
     tool_mode: str | None = None  # "simulated" | "live", Set D only (9.5)
+    reasoning_mode: str | None = None  # "enabled" | "disabled", Qwen3 only (ADR 0010, 9.3)
 
 
 def read_samples(jsonl_path: Path) -> list[dict]:
@@ -107,13 +108,19 @@ def infer_backend(base_url: str) -> str:
 
 
 def provenance_from_aggregated_results(
-    aggregated_results_path: Path, *, corpus_version: str, model_digest: str | None = None
+    aggregated_results_path: Path,
+    *,
+    corpus_version: str,
+    model_digest: str | None = None,
+    reasoning_mode: str | None = None,
 ) -> RunProvenance:
     """Build a RunProvenance from lm-eval-harness's own aggregated
     `results_*.json` (sibling to the `samples_*.jsonl` file), which carries
-    the model name and base_url but not a model digest — that must be
-    supplied separately (e.g. from `ollama list`), since it isn't recorded
-    anywhere in harness output."""
+    the model name and base_url but not a model digest or which Qwen3
+    reasoning-mode condition (ADR 0010) produced the run — neither is
+    recorded anywhere in harness output, so both must be supplied
+    separately (model digest e.g. from `ollama list`; reasoning_mode is
+    simply which condition the operator ran)."""
     with open(aggregated_results_path, encoding="utf-8") as f:
         aggregated = json.load(f)
     model_args = aggregated["config"].get("model_args", {})
@@ -125,6 +132,7 @@ def provenance_from_aggregated_results(
         backend=infer_backend(base_url),
         run_timestamp=run_timestamp,
         model_digest=model_digest,
+        reasoning_mode=reasoning_mode,
     )
 
 

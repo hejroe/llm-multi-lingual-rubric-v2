@@ -832,12 +832,35 @@ Base parameters, applied uniformly unless a documented override applies
   (language/variety/jurisdiction variant) in this pilot. This is a starting
   point, not a ceiling — the original repo used no replication, meaning it
   had no way to distinguish stochastic variation from a systematic result.
+- **System prompt**: none, uniformly, across every model and task. Stated
+  here as a deliberate, uniform choice, not an unexamined default — each
+  model's own tuning-time assumptions about system-prompt presence could
+  otherwise bias verbosity, hedging, or refusal style in a way that looks
+  like a cross-lingual or cross-model capability difference (RQ1) but
+  isn't one. Found worth stating explicitly only once it was noticed
+  (2026-09-12) that no task definition set one either way — an
+  undocumented default is exactly the kind of hidden methodological choice
+  this project's own review of the original repo exists to avoid
+  repeating.
+- **Few-shot-as-multiturn formatting**: `fewshot_as_multiturn=True` (the
+  harness's own default, confirmed applying via its startup log,
+  2026-09-12) — few-shot examples are rendered as separate prior
+  conversation turns rather than concatenated into one prompt. Recorded
+  here as a deliberate, accepted choice, not left as an implicit default a
+  reader would have to notice for themselves.
+- **Maximum generation length**: 2048 tokens, applied uniformly across
+  every custom task family (`configs/lm_eval_tasks/corpus_*/`), matching
+  the stock `mmlu_prox` task's own figure (9.2). Found inconsistent
+  (2026-09-12) between task families that had copied the stock MCQ
+  template's explicit `max_gen_toks: 2048` and the procedural/free-text
+  task families, which left it uncapped — standardised rather than left as
+  an accidental per-family difference with no stated reason.
 
 **Run Parameter Overrides**
 
 | Model | Parameter | Override | Reasoning |
 |---|---|---|---|
-| Qwen3 (all sizes) | Reasoning mode | Non-reasoning ("dialogue") mode used by default | The rubric's Correct-Process category (8.2) is designed for procedural-reasoning items generally, not this model family's specific reasoning-mode toggle; using reasoning mode uniformly would confound RQ1 comparisons with a mode choice rather than a genuine capability difference. Flagged for revisiting once Section 10's analysis plan is written. |
+| Qwen3 (all sizes) | Reasoning mode | Both non-reasoning ("dialogue") and reasoning ("thinking") mode are run, as separate conditions (ADR 0010) — non-reasoning is the *primary, pre-registered* condition every confirmatory RQ's comparison uses; reasoning-mode results are reported descriptively alongside, never pooled with it. | Non-reasoning mode alone kept Qwen3 comparable to every other tested model under the same fixed parameters, but is itself an artificial restriction away from how the model actually ships (confirmed 2026-09-12: Qwen3 4B defaults to reasoning mode via llama.cpp's chat template) and forecloses a genuinely interesting question this pilot can otherwise answer — does reasoning narrow the cross-lingual/jurisdiction/currency/tool-calibration error patterns RQ1-RQ4 measure? Revisited (this entry originally deferred that question to "once Section 10's analysis plan is written" — it now has been) and resolved by running both, per ADR 0010. |
 
 *(This table starts near-empty deliberately — an override is added only
 when a specific, documented reason exists, not by default.)*
@@ -916,14 +939,21 @@ Two supported modes, logged per run (9.6):
 
 Every result row is stamped, at run time, with: corpus version, model
 digest, run timestamp (5.7); backend used (9.2); any parameter override
-applied (9.3); and, for Set D items, which tool mode was used and, in Live
-mode, the tool's actual response and its timestamp (9.5). This is
-implemented as harness/wrapper configuration, not left as a downstream
-reconciliation task.
+applied (9.3), including which Qwen3 reasoning-mode condition (ADR 0010)
+produced it; and, for Set D items, which tool mode was used and, in Live
+mode, the tool's actual response and its timestamp (9.5). Implemented in
+`scoring/io.py`'s `RunProvenance` (`corpus_version`, `model_name`,
+`backend`, `run_timestamp`, `rubric_version`, `model_digest`,
+`reasoning_mode`, `tool_mode`) — not left as a downstream reconciliation
+task.
 
 ### 9.7 Versioning
 
-Docker images are pinned by digest, not a floating tag. The compose
+Docker images are pinned by digest, not a floating tag (verified true of
+the Dockerfile's own `FROM` line and its `lm-eval-harness` install
+2026-09-12 — both had in fact been floating references since this
+project's first build, silently contradicting this claim until fixed).
+The compose
 configuration, backend register, and run-parameter defaults are versioned
 alongside the corpus/model/rubric versions (5.8, 7.5, 8.8), so a given
 run's entire stack — corpus, models, rubric, environment, and parameters —

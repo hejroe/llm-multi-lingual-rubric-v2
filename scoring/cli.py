@@ -27,6 +27,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--corpus-version", required=True, help="e.g. v0.2 (STUDY_PROTOCOL.md 5.8)")
     parser.add_argument("--out", required=True, type=Path)
     parser.add_argument("--model-digest", default=None, help="from `ollama list` — not recoverable from harness output")
+    parser.add_argument(
+        "--reasoning-mode", default=None, choices=["enabled", "disabled"],
+        help="Qwen3 only (ADR 0010) — which condition this run used; not recoverable from harness output",
+    )
     args = parser.parse_args(argv)
 
     if not args.run_dir.is_dir():
@@ -47,7 +51,10 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     provenance = provenance_from_aggregated_results(
-        aggregated_results_path, corpus_version=args.corpus_version, model_digest=args.model_digest
+        aggregated_results_path,
+        corpus_version=args.corpus_version,
+        model_digest=args.model_digest,
+        reasoning_mode=args.reasoning_mode,
     )
 
     all_results = []

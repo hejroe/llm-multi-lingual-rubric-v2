@@ -18,6 +18,7 @@ generation_kwargs:
     - "<|im_end|>"
   do_sample: false
   temperature: 0.0
+  max_gen_toks: 2048
 filter_list:
   - name: take_first
     filter:

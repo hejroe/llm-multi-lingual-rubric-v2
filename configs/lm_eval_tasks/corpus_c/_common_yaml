@@ -9,6 +9,11 @@ test_split: train
 output_type: generate_until
 target_delimiter: ""
 doc_to_target: '{{gold_answer}}'
+# NOTE: lm-eval-harness's `include:` merge is shallow (dict.update per
+# top-level key, lm_eval/tasks/_yaml_loader.py) — each per-language file
+# redeclares `generation_kwargs` (to set its own stop sequence), which
+# REPLACES this whole block rather than merging into it. max_gen_toks
+# (9.3) must therefore be repeated in every per-language file directly.
 generation_kwargs:
   do_sample: false
   temperature: 0.0

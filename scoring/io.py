@@ -49,6 +49,7 @@ class RunProvenance:
     param_overrides: str | None = None
     tool_mode: str | None = None  # "simulated" | "live", Set D only (9.5)
     reasoning_mode: str | None = None  # "enabled" | "disabled", Qwen3 only (ADR 0010, 9.3)
+    replicate_index: int | None = None  # which of N replications (9.3, scripts/replicate_run.py) this run is
 
 
 def read_samples(jsonl_path: Path) -> list[dict]:
@@ -132,6 +133,7 @@ def provenance_from_aggregated_results(
         run_timestamp=run_timestamp,
         model_digest=model_digest,
         reasoning_mode=reasoning_mode,
+        replicate_index=replicate_index,
     )
 
 

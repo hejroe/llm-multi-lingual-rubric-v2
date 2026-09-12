@@ -974,8 +974,8 @@ produced it; and, for Set D items, which tool mode was used and, in Live
 mode, the tool's actual response and its timestamp (9.5). Implemented in
 `scoring/io.py`'s `RunProvenance` (`corpus_version`, `model_name`,
 `backend`, `run_timestamp`, `rubric_version`, `model_digest`,
-`reasoning_mode`, `tool_mode`) — not left as a downstream reconciliation
-task.
+`reasoning_mode`, `tool_mode`, `replicate_index`) — not left as a
+downstream reconciliation task.
 
 ### 9.7 Versioning
 

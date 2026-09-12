@@ -8,6 +8,10 @@ results/*
 # files directly on this device; items here are awaiting manual deletion).
 _to_delete/
 
+# Model weights: large binaries, obtained manually per models/README.md,
+# never committed.
+models/*.gguf
+
 # Common junk
 __pycache__/
 *.pyc

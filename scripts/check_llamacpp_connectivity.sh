@@ -1,26 +1,31 @@
 #!/usr/bin/env bash
 # Run this INSIDE the eval container first, before any Set D (RQ4) run, to
-# confirm it can reach the containerised llama.cpp server (compose
-# service-name networking, not host.docker.internal — llamacpp runs inside
-# this same compose stack, unlike Ollama).
+# confirm it can reach the containerised llama.cpp server.
 #
 #   docker compose run --rm eval bash scripts/check_llamacpp_connectivity.sh
 #
 # Requires the llamacpp service to already be running:
 #   docker compose up -d llamacpp
+#
+# Reached via its published port (http://localhost:8081), not compose
+# service-name DNS (http://llamacpp:8080) — the `eval` service now runs with
+# `network_mode: host` (docker-compose.yml, needed for the Ollama path, see
+# its header comment), which bypasses the compose bridge network's DNS
+# entirely. localhost:8081 works because eval shares the WSL2 host's network
+# namespace, where llamacpp's port is published.
 
 set -euo pipefail
 
-echo "Checking http://llamacpp:8080/health ..."
-if curl -sf --max-time 5 http://llamacpp:8080/health; then
+echo "Checking http://localhost:8081/health ..."
+if curl -sf --max-time 5 http://localhost:8081/health; then
   echo
   echo "OK: llama.cpp server is reachable and healthy."
   echo "Checking /v1/models for the loaded model name..."
-  curl -sf --max-time 5 http://llamacpp:8080/v1/models
+  curl -sf --max-time 5 http://localhost:8081/v1/models
   echo
 else
   echo
-  echo "FAILED: could not reach llamacpp:8080."
+  echo "FAILED: could not reach llama.cpp at localhost:8081."
   echo "Things to check:"
   echo "  1. Is the llamacpp service actually started? (docker compose up -d llamacpp)"
   echo "  2. Does ../models/model.gguf exist? (see models/README.md)"

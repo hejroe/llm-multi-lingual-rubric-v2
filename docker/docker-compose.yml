@@ -7,19 +7,39 @@
 #     --model_args base_url=http://host.docker.internal:11434/v1/chat/completions,model=llama3.2:1b,num_concurrent=1 \
 #     --tasks mmlu_prox_en_biology --limit 5 --output_path /results/smoke_test_mmlu_prox_en
 #
-# extra_hosts below is what makes host.docker.internal resolve correctly when
-# running under native Docker Engine on WSL2 (Docker Desktop provides this
-# mapping automatically; native Docker Engine does not, so we add it here).
+# host.docker.internal wiring (verified end-to-end 2026-09-12): the
+# `extra_hosts: host.docker.internal: host-gateway` shortcut that works under
+# Docker Desktop does NOT reach a Windows-native Ollama under native Docker
+# Engine on WSL2 — "host-gateway" there resolves to the container's own
+# docker0 bridge gateway on the WSL2 Linux VM, which has nothing listening on
+# it; Ollama is on Windows, one hop further away. Getting there requires BOTH:
+#   1. WSL2 "mirrored" networking (%USERPROFILE%\.wslconfig: [wsl2]
+#      networkingMode=mirrored, then `wsl --shutdown`), which makes WSL2's own
+#      localhost forward to Windows' localhost and vice versa; and
+#   2. `network_mode: host` below, so this container shares WSL2's network
+#      namespace directly instead of sitting behind the docker0 bridge, where
+#      that localhost-forwarding trick does not apply.
+# With both in place, `host.docker.internal` is mapped straight to 127.0.0.1
+# via extra_hosts (not host-gateway) and resolves correctly. Also requires
+# Ollama bound to 0.0.0.0 (OLLAMA_HOST=0.0.0.0), not the 127.0.0.1-only
+# default, and a Windows Firewall inbound allow rule for TCP 11434 (classic
+# Windows Firewall, not the separate Hyper-V VM Firewall some WSL2 builds use
+# for the old NAT-mode vEthernet adapter — mirrored mode sidesteps that
+# entirely, which is the other reason it's used here over a firewall-only fix).
+#
 # Ollama itself runs natively on Windows, not as a service in this file — see
 # docs/STUDY_PROTOCOL.md Section 9.2 for why.
 #
 # The `llamacpp` service below is the one exception: it DOES run
-# containerised, with GPU passthrough, and IS reached via compose
-# service-name networking (http://llamacpp:8080), because — unlike Ollama —
-# it has no separate native-Windows install path and this project's Set D
-# (RQ4, tool-calling) specifically needs its OpenAI-compatible tool-calling
-# support (docs/adr/0001-inference-backend-abstraction.md). Closes the gap
-# tracked in docs/STUDY_PROTOCOL.md Section 12.10.
+# containerised, with GPU passthrough, because — unlike Ollama — it has no
+# separate native-Windows install path and this project's Set D (RQ4,
+# tool-calling) specifically needs its OpenAI-compatible tool-calling support
+# (docs/adr/0001-inference-backend-abstraction.md). Closes the gap tracked in
+# docs/STUDY_PROTOCOL.md Section 12.10. Because `eval` now runs with
+# `network_mode: host` (above), it can no longer resolve `llamacpp` by compose
+# service-name DNS (host networking bypasses the compose bridge network
+# entirely) — reach it via its published port instead: http://localhost:8081
+# (see `scripts/check_llamacpp_connectivity.sh`).
 #
 # Run one backend at a time: this project's target hardware has 8GB VRAM
 # (per its original scoping), and Ollama (native) and `llamacpp` (this
@@ -36,8 +56,10 @@ services:
       - ../results:/results
       - ../configs:/configs
       - ../scripts:/home/runner/scripts
+      - ../corpus:/corpus:ro
+    network_mode: host
     extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - "host.docker.internal:127.0.0.1"
     working_dir: /home/runner
 
   llamacpp:

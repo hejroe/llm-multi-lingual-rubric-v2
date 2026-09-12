@@ -1,0 +1,32 @@
+# corpus_e (Set E, Contamination-Check Set, RQ6) — English only at this
+# corpus version (5.5/5.8): perturbed twins of Set A items, run alongside
+# their originals (corpus_a_knowledge_en). No process_docs filter needed;
+# the whole file is one task.
+task: corpus_e_en
+dataset_path: csv
+dataset_kwargs:
+  data_files: /corpus/v0.2/set_e.csv
+test_split: train
+output_type: generate_until
+target_delimiter: ""
+doc_to_text: '{{"Question: "+question_text+"\nAnswer:"}}'
+doc_to_target: '{{gold_answer}}'
+generation_kwargs:
+  until:
+    - "Question:"
+    - "</s>"
+    - "<|im_end|>"
+  do_sample: false
+  temperature: 0.0
+filter_list:
+  - name: take_first
+    filter:
+      - function: take_first
+metric_list:
+  - metric: exact_match
+    aggregation: mean
+    higher_is_better: true
+    ignore_case: true
+    ignore_punctuation: true
+metadata:
+  version: 0.1

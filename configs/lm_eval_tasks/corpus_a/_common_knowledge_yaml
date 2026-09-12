@@ -1,0 +1,29 @@
+# Shared template for corpus_a's knowledge-domain (MMLU-ProX-sourced,
+# multiple-choice) tasks — scoped to this project's own curated corpus/vX.Y
+# Set A rows, NOT the full upstream MMLU-ProX benchmark the stock
+# `mmlu_prox_*` tasks pull from (that gap, and why this task family exists
+# at all, is recorded in docs/adr/0009-custom-corpus-harness-tasks.md).
+dataset_path: csv
+test_split: train
+output_type: generate_until
+target_delimiter: ""
+doc_to_target: '{{gold_answer}}'
+generation_kwargs:
+  do_sample: false
+  temperature: 0.0
+  max_gen_toks: 2048
+filter_list:
+  - name: flexible-extract
+    filter:
+      - function: regex
+        group_select: -1
+        regex_pattern: "answer is \\(?([ABCDEFGHIJ])\\)?"
+      - function: take_first
+metric_list:
+  - metric: exact_match
+    aggregation: mean
+    higher_is_better: true
+    ignore_case: true
+    ignore_punctuation: true
+metadata:
+  version: 0.1

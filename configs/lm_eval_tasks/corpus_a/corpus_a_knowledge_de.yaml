@@ -1,0 +1,14 @@
+task: corpus_a_knowledge_de
+include: _common_knowledge_yaml
+dataset_kwargs:
+  data_files: /corpus/v0.2/set_a.csv
+process_docs: !function utils.filter_knowledge_de
+doc_to_text: !function utils.format_mcq_de
+generation_kwargs:
+  until:
+    - "Frage:"
+    - "</s>"
+    - "<|im_end|>"
+  do_sample: false
+  temperature: 0.0
+  max_gen_toks: 2048

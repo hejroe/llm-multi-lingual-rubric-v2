@@ -1,0 +1,28 @@
+# Shared template for corpus_a's procedural-domain (MGSM-Rev2-sourced, free-
+# text numeric answer) tasks — mirrors mgsm_rev2's own common template
+# (configs/lm_eval_tasks/mgsm_rev2/_mgsm_rev2_common_yaml) exactly, scoped to
+# this project's own curated corpus/vX.Y Set A procedural rows rather than
+# the full 250-row MGSM-Rev2 dataset that mgsm_rev2_direct_* runs against.
+dataset_path: csv
+test_split: train
+output_type: generate_until
+target_delimiter: ""
+doc_to_target: '{{gold_answer|string}}'
+generation_kwargs:
+  do_sample: false
+  temperature: 0.0
+filter_list:
+  - name: flexible-extract
+    filter:
+      - function: regex
+        group_select: -1
+        regex_pattern: (-?[$0-9.,]{2,})|(-?[0-9]+)
+      - function: take_first
+metric_list:
+  - metric: exact_match
+    aggregation: mean
+    higher_is_better: true
+    ignore_case: true
+    ignore_punctuation: true
+metadata:
+  version: 0.1

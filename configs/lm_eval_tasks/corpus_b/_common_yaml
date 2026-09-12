@@ -1,0 +1,30 @@
+# Shared template for corpus_b (Set B, Jurisdiction-Contingent Set, RQ2) —
+# scoped to this project's own curated corpus/vX.Y set_b.csv rows. Question
+# text already embeds jurisdiction context where applicable (5.5); this
+# template renders it plainly, no options.
+#
+# Set B's unspecified-jurisdiction variant carries no gold_answer (5.6) —
+# doc_to_target falls back to a literal placeholder rather than crashing;
+# 8.2's Correct/Incorrect axis is not scored for it either way (5.5), and
+# this project's own rubric (not lm-eval-harness's built-in exact_match)
+# is what actually scores every response (see scoring/rubric.py).
+dataset_path: csv
+test_split: train
+output_type: generate_until
+target_delimiter: ""
+doc_to_target: '{{gold_answer if gold_answer else "N/A"}}'
+generation_kwargs:
+  do_sample: false
+  temperature: 0.0
+filter_list:
+  - name: take_first
+    filter:
+      - function: take_first
+metric_list:
+  - metric: exact_match
+    aggregation: mean
+    higher_is_better: true
+    ignore_case: true
+    ignore_punctuation: true
+metadata:
+  version: 0.1

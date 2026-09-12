@@ -1,0 +1,13 @@
+task: corpus_a_procedural_sw
+include: _common_procedural_yaml
+dataset_kwargs:
+  data_files: /corpus/v0.2/set_a.csv
+process_docs: !function utils.filter_procedural_sw
+doc_to_text: '{{"Swali: "+question_text+"\nAnswer:"}}'
+generation_kwargs:
+  until:
+    - "Swali:"
+    - "</s>"
+    - "<|im_end|>"
+  do_sample: false
+  temperature: 0.0

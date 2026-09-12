@@ -1,0 +1,26 @@
+# Shared template for corpus_c (Set C, Temporal-Currency Set, RQ3) — scoped
+# to this project's own curated corpus/vX.Y set_c.csv rows. Includes every
+# effective-date version of each fact (filtered only by language, not by
+# version) deliberately: RQ3 compares the model's answer against both the
+# stale and current gold values for the same question (8.3's
+# Currency-Awareness overlay, scored in scoring/rubric.py).
+dataset_path: csv
+test_split: train
+output_type: generate_until
+target_delimiter: ""
+doc_to_target: '{{gold_answer}}'
+generation_kwargs:
+  do_sample: false
+  temperature: 0.0
+filter_list:
+  - name: take_first
+    filter:
+      - function: take_first
+metric_list:
+  - metric: exact_match
+    aggregation: mean
+    higher_is_better: true
+    ignore_case: true
+    ignore_punctuation: true
+metadata:
+  version: 0.1

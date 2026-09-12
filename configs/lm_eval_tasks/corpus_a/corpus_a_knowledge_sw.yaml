@@ -1,0 +1,14 @@
+task: corpus_a_knowledge_sw
+include: _common_knowledge_yaml
+dataset_kwargs:
+  data_files: /corpus/v0.2/set_a.csv
+process_docs: !function utils.filter_knowledge_sw
+doc_to_text: !function utils.format_mcq_sw
+generation_kwargs:
+  until:
+    - "Swali:"
+    - "</s>"
+    - "<|im_end|>"
+  do_sample: false
+  temperature: 0.0
+  max_gen_toks: 2048

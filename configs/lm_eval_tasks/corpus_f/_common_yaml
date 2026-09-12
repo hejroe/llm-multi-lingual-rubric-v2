@@ -1,0 +1,32 @@
+# Shared template for corpus_f (Set F, Regional Variety Set, RQ7). Run
+# alongside corpus_a_knowledge_en (the US-English originals, 5.5) — not a
+# separate "US" variety task here.
+dataset_path: csv
+test_split: train
+output_type: generate_until
+target_delimiter: ""
+doc_to_text: !function utils.format_mcq
+doc_to_target: '{{gold_answer}}'
+generation_kwargs:
+  until:
+    - "Question:"
+    - "</s>"
+    - "<|im_end|>"
+  do_sample: false
+  temperature: 0.0
+  max_gen_toks: 2048
+filter_list:
+  - name: flexible-extract
+    filter:
+      - function: regex
+        group_select: -1
+        regex_pattern: "answer is \\(?([ABCDEFGHIJ])\\)?"
+      - function: take_first
+metric_list:
+  - metric: exact_match
+    aggregation: mean
+    higher_is_better: true
+    ignore_case: true
+    ignore_punctuation: true
+metadata:
+  version: 0.1

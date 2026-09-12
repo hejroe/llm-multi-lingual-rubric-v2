@@ -1,0 +1,13 @@
+task: corpus_c_bn
+include: _common_yaml
+dataset_kwargs:
+  data_files: /corpus/v0.2/set_c.csv
+process_docs: !function utils.filter_bn
+doc_to_text: '{{"প্রশ্ন: "+question_text+"\nAnswer:"}}'
+generation_kwargs:
+  until:
+    - "প্রশ্ন:"
+    - "</s>"
+    - "<|im_end|>"
+  do_sample: false
+  temperature: 0.0

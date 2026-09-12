@@ -23,12 +23,17 @@
 #       --limit 5 \
 #       --output_path /results/smoke_test_mgsm_de
 
-FROM python:3.11-slim
+# Pinned by digest (2026-09-12), not a floating tag -- Protocol 9.7 says every
+# run's stack should be reproducible from its version numbers alone; a bare
+# `python:3.11-slim` tag can silently point at a different image on a later
+# rebuild, which contradicts that. Re-resolve with `docker pull python:3.11-slim`
+# + `docker inspect ... --format '{{index .RepoDigests 0}}'` if this ever needs
+# bumping deliberately.
+FROM python:3.11-slim@sha256:9534e5a8e315485d4061ed659af0fd78a284c015f9b73661b41d6bab25604534
 
 # git is needed to install lm-eval-harness directly from GitHub (rather than a
 # possibly-stale PyPI release), so we get the mgsm / mmlu_prox / afrimgsm task
-# definitions and the local-chat-completions model type confirmed present on
-# the main branch during this project's review.
+# definitions and the local-chat-completions model type confirmed present.
 RUN apt-get update && apt-get install -y --no-install-recommends git curl \
     && rm -rf /var/lib/apt/lists/*
 
@@ -41,8 +46,16 @@ RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 
 # Install lm-evaluation-harness with the "api" extra (needed for the
 # local-completions / local-chat-completions model types that talk to an
-# OpenAI-compatible server such as Ollama).
-RUN pip install --no-cache-dir "lm-eval[api] @ git+https://github.com/EleutherAI/lm-evaluation-harness.git"
+# OpenAI-compatible server such as Ollama). Pinned to a specific commit
+# (2026-09-12), not the floating main branch, for the same reproducibility
+# reason as the base image above -- this had been an unpinned `git+...`
+# reference since this project's first build, which a rebuild today would
+# have silently resolved to a different, later commit than every run so far
+# was actually verified against. The exact commit originally installed isn't
+# recoverable after the fact (pip discards a git checkout's history once it
+# builds the wheel, and no run this project has done so far recorded it) --
+# this pin is a forward-looking fix from today's HEAD, not a retroactive one.
+RUN pip install --no-cache-dir "lm-eval[api] @ git+https://github.com/EleutherAI/lm-evaluation-harness.git@ad8737ae7fad24cf64e50fc7fc31397bff586b9e"
 
 # Non-root user for defense in depth - this container has no reason to run as root.
 RUN useradd --create-home --shell /bin/bash runner

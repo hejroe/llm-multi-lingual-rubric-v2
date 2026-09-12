@@ -1,0 +1,31 @@
+{
+  "_source": "docs/STUDY_PROTOCOL.md Appendix A.3 (8.6) — machine-readable copy. Edit the Protocol appendix first if the marker list itself changes; keep this file in sync with it.",
+  "en": [
+    "i don't know",
+    "i dont know",
+    "i'm not sure",
+    "im not sure",
+    "i cannot verify",
+    "i can't verify",
+    "i don't have that information",
+    "i dont have that information",
+    "i'm not certain",
+    "im not certain"
+  ],
+  "de": [
+    "ich weiß es nicht",
+    "ich weiss es nicht",
+    "ich bin mir nicht sicher",
+    "das kann ich nicht bestätigen",
+    "das kann ich nicht bestaetigen",
+    "ich habe diese information nicht"
+  ],
+  "sw": [
+    "sijui",
+    "sina uhakika"
+  ],
+  "bn": [
+    "আমি জানি না",
+    "আমি নিশ্চিত নই"
+  ]
+}

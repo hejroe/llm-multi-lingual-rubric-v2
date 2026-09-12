@@ -1,0 +1,105 @@
+"""Text normalisation and gold-answer matching (8.4 steps 2-3).
+
+Each function here fixes one of the three scoring-pipeline bugs the original
+review found (8.5): think-block leakage, English-only matching, and (via
+normalisation) the accent/variety sensitivity that made otherwise-correct
+non-English or non-US-spelling answers register as wrong.
+"""
+
+from __future__ import annotations
+
+import json
+import re
+import unicodedata
+from pathlib import Path
+
+_DATA_DIR = Path(__file__).parent / "data"
+
+_THINK_BLOCK_RE = re.compile(r"<think>.*?</think>", re.IGNORECASE | re.DOTALL)
+
+_PUNCTUATION_RE = re.compile(r"[.,;:!?'\"()\[\]{}]")
+_WHITESPACE_RE = re.compile(r"\s+")
+
+
+def strip_think_blocks(text: str) -> str:
+    """8.4 step 2: remove reasoning/chain-of-thought blocks before matching.
+
+    Prevents the original repo's bug where an unstripped `<think>` block was
+    scored as if it were the final answer (8.5).
+    """
+    return _THINK_BLOCK_RE.sub("", text)
+
+
+def _strip_accents(text: str) -> str:
+    decomposed = unicodedata.normalize("NFKD", text)
+    return "".join(ch for ch in decomposed if not unicodedata.combining(ch))
+
+
+def _load_variety_conversion() -> dict:
+    with open(_DATA_DIR / "variety_conversion.json", encoding="utf-8") as f:
+        data = json.load(f)
+    return {k: v for k, v in data.items() if not k.startswith("_")}
+
+
+_VARIETY_CONVERSION = _load_variety_conversion()
+
+
+def normalise_for_matching(text: str) -> str:
+    """Case-fold, strip accents/punctuation, and collapse whitespace.
+
+    Language-agnostic by design (5.6/6.3): this is what makes matching
+    language- and variety-appropriate rather than the original repo's
+    English-only regex (8.5).
+    """
+    text = text.strip().lower()
+    text = _strip_accents(text)
+    text = _PUNCTUATION_RE.sub("", text)
+    text = _WHITESPACE_RE.sub(" ", text).strip()
+    return text
+
+
+def _variety_equivalents(word: str) -> set[str]:
+    """All known spellings of `word` across the tracked US/UK/AU variants."""
+    equivalents = {word}
+    for table in _VARIETY_CONVERSION.values():
+        for us_word, variant_word in table.items():
+            if word in (us_word, variant_word):
+                equivalents.add(us_word)
+                equivalents.add(variant_word)
+    return equivalents
+
+
+_ARITHMETIC_WORKING_RE = re.compile(r"\d+\s*[+\-−*×x/÷]\s*\d+\s*=")
+
+
+def shows_arithmetic_working(response_text: str) -> bool:
+    """A crude proxy for "a method was shown" (8.4 step 5, Correct-Process):
+    at least one `number operator number =` pattern, i.e. more than just a
+    bare final answer. Says nothing about whether the method is valid."""
+    return bool(_ARITHMETIC_WORKING_RE.search(response_text))
+
+
+def matches_gold_answer(response_text: str, gold_answer: str) -> bool:
+    """8.4 step 3: does the (already think-stripped) response contain the
+    gold answer, under accent-insensitive, variety-aware matching?
+
+    A plain substring test after normalisation, extended so a Set F item's
+    "wrong" variety spelling for a tracked word (Appendix A.2) is not itself
+    a mismatch (RUBRIC_CARDS.md's "Correct" card, common confusion).
+    """
+    if not gold_answer:
+        # Set B's unspecified-jurisdiction variant carries no gold_answer
+        # (5.6) — Correct is simply not assessed for it.
+        return False
+
+    normalised_response = normalise_for_matching(response_text)
+    normalised_gold = normalise_for_matching(gold_answer)
+
+    if normalised_gold in normalised_response:
+        return True
+
+    for variant in _variety_equivalents(normalised_gold):
+        if variant in normalised_response:
+            return True
+
+    return False

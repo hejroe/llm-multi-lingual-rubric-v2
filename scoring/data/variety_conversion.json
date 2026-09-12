@@ -1,0 +1,20 @@
+{
+  "_source": "docs/STUDY_PROTOCOL.md Appendix A.2 (9.4.2) — machine-readable copy. Edit the Protocol appendix first if the conversion lists themselves change; keep this file in sync with it. Used here only for RUBRIC_CARDS.md's 'Correct' card: a Set F response using a different variety's spelling for a word on this list is not on that basis alone marked wrong.",
+  "us_to_uk": {
+    "color": "colour",
+    "organize": "organise",
+    "center": "centre",
+    "defense": "defence",
+    "traveled": "travelled",
+    "aluminum": "aluminium",
+    "tire": "tyre",
+    "math": "maths",
+    "gray": "grey"
+  },
+  "us_to_au": {
+    "color": "colour",
+    "organize": "organise",
+    "center": "centre",
+    "acknowledgment": "acknowledgement"
+  }
+}

@@ -27,7 +27,7 @@ from scoring.keywords import (
     idk_marker_present,
     invented_detail_signal,
 )
-from scoring.matching import matches_gold_answer, shows_arithmetic_working, strip_think_blocks
+from scoring.matching import extract_think_blocks, matches_gold_answer, shows_arithmetic_working
 
 
 @dataclass
@@ -39,6 +39,12 @@ class ScoredResponse:
     currency_awareness: CurrencyAwareness | None = None
     tool_invocation: ToolInvocationCalibration | None = None
     notes: list[str] = field(default_factory=list)
+    # Preserved for audit (Section 11, added 2026-09-12/ADR 0010) rather
+    # than discarded once used for matching — only recovers a trace
+    # embedded in `content` behind <think> tags; see
+    # scoring/matching.py's extract_think_blocks docstring for what this
+    # does not capture.
+    reasoning_trace: str | None = None
 
 
 def _resolve_gold_text(item: dict) -> str:
@@ -103,7 +109,10 @@ def score_response(
     assert response_text is not None  # guaranteed non-empty by the check above
 
     # Step 2: strip reasoning/chain-of-thought before any text matching.
-    stripped_response = strip_think_blocks(response_text)
+    # The extracted trace is preserved (not just discarded) for audit
+    # (Section 11, ADR 0010) — see extract_think_blocks' own docstring for
+    # what it does and doesn't capture.
+    stripped_response, reasoning_trace = extract_think_blocks(response_text)
 
     # Step 3: language/variety-appropriate Correct match.
     gold_text = _resolve_gold_text(item)
@@ -115,7 +124,7 @@ def score_response(
         )
         _apply_overlays(
             result, item, stripped_response, sibling_jurisdiction_items,
-            sibling_version_items, tool_call_invoked, language,
+            sibling_version_items, tool_call_invoked, language, reasoning_trace,
         )
         return result
 
@@ -169,7 +178,7 @@ def score_response(
         )
         _apply_overlays(
             result, item, stripped_response, sibling_jurisdiction_items,
-            sibling_version_items, tool_call_invoked, language,
+            sibling_version_items, tool_call_invoked, language, reasoning_trace,
         )
         return result
 
@@ -182,7 +191,7 @@ def score_response(
     result = ScoredResponse(question_id=question_id, category=category, confidence_tier=tier)
     _apply_overlays(
         result, item, stripped_response, sibling_jurisdiction_items,
-        sibling_version_items, tool_call_invoked, language,
+        sibling_version_items, tool_call_invoked, language, reasoning_trace,
     )
     return result
 
@@ -195,9 +204,11 @@ def _apply_overlays(
     sibling_version_items: list[dict] | None,
     tool_call_invoked: bool | None,
     language: str,
+    reasoning_trace: str | None = None,
 ) -> None:
     """Step 7: family-specific overlays, in addition to (never instead of)
     the primary category already assigned above."""
+    result.reasoning_trace = reasoning_trace
     family = item.get("family")
 
     if family == "B":

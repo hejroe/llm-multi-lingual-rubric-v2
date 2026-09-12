@@ -1,4 +1,9 @@
-from scoring.matching import matches_gold_answer, shows_arithmetic_working, strip_think_blocks
+from scoring.matching import (
+    extract_think_blocks,
+    matches_gold_answer,
+    shows_arithmetic_working,
+    strip_think_blocks,
+)
 
 
 def test_strip_think_blocks_removes_reasoning_before_matching():
@@ -6,6 +11,21 @@ def test_strip_think_blocks_removes_reasoning_before_matching():
     response = "<think>The answer is definitely the nucleus.</think>The mitochondria."
     assert "nucleus" not in strip_think_blocks(response)
     assert matches_gold_answer(strip_think_blocks(response), "mitochondria")
+
+
+def test_extract_think_blocks_preserves_what_strip_think_blocks_discards():
+    # Added 2026-09-12 (ADR 0010) — the reasoning trace is kept for audit
+    # (Section 11), not just thrown away once used for matching.
+    response = "<think>The answer is definitely the nucleus.</think>The mitochondria."
+    stripped, reasoning = extract_think_blocks(response)
+    assert stripped == strip_think_blocks(response)
+    assert reasoning == "<think>The answer is definitely the nucleus.</think>"
+
+
+def test_extract_think_blocks_none_when_nothing_to_strip():
+    stripped, reasoning = extract_think_blocks("The mitochondria.")
+    assert stripped == "The mitochondria."
+    assert reasoning is None
 
 
 def test_correct_german_trailing_article_and_punctuation_not_a_barrier():

@@ -78,6 +78,26 @@ def test_correct_response():
     assert result.confidence_tier == ConfidenceTier.HIGH_CONFIDENCE
 
 
+def test_reasoning_trace_preserved_for_audit():
+    # Added 2026-09-12 (ADR 0010, Section 11) — kept on the scored result,
+    # not discarded once used for matching.
+    item = _knowledge_item()
+    result = score_response(
+        question_id=item["question_id"], item=item,
+        response_text="<think>It must be the mitochondria based on cellular respiration.</think>Die Mitochondrien.",
+    )
+    assert result.category == PrimaryCategory.CORRECT
+    assert result.reasoning_trace == "<think>It must be the mitochondria based on cellular respiration.</think>"
+
+
+def test_reasoning_trace_none_when_no_think_block():
+    item = _knowledge_item()
+    result = score_response(
+        question_id=item["question_id"], item=item, response_text="Die Mitochondrien."
+    )
+    assert result.reasoning_trace is None
+
+
 def test_correct_beats_correct_process_even_with_shown_working():
     # RUBRIC_CARDS.md: Correct is checked first (step 3); Correct-Process
     # only applies once the final answer is already wrong.

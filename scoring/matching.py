@@ -30,6 +30,24 @@ def strip_think_blocks(text: str) -> str:
     return _THINK_BLOCK_RE.sub("", text)
 
 
+def extract_think_blocks(text: str) -> tuple[str, str | None]:
+    """Same stripping as `strip_think_blocks`, but also returns whatever was
+    removed (`None` if there was nothing to remove) — added (2026-09-12,
+    ADR 0010) so a reasoning trace is preserved as part of the scored
+    record for audit (Section 11) rather than simply discarded once used
+    for matching. This only recovers a trace embedded in `content` behind
+    `<think>` tags; a backend that returns reasoning in a genuinely
+    separate API field (llama.cpp's `reasoning_content`, confirmed
+    2026-09-12) is not captured here at all — stock lm-eval-harness's own
+    response parsing discards that field before `--log_samples` ever sees
+    it, a capture gap this function cannot close (see scoring/io.py's
+    module docstring).
+    """
+    matches = _THINK_BLOCK_RE.findall(text)
+    reasoning_trace = "\n".join(matches) if matches else None
+    return _THINK_BLOCK_RE.sub("", text), reasoning_trace
+
+
 def _strip_accents(text: str) -> str:
     decomposed = unicodedata.normalize("NFKD", text)
     return "".join(ch for ch in decomposed if not unicodedata.combining(ch))

@@ -229,6 +229,7 @@ class ProvenancedScoredResponse:
             self.scored.tool_invocation.value if self.scored.tool_invocation else None
         )
         row["notes"] = list(self.scored.notes)
+        row["reasoning_trace"] = self.scored.reasoning_trace
         for field_name in _ITEM_CONTEXT_FIELDS:
             row[field_name] = self.item.get(field_name)
         row.update(asdict(self.provenance))

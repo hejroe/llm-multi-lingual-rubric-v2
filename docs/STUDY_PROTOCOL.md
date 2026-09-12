@@ -1123,6 +1123,26 @@ though the two positions directly conflict with each other. This recovers
 the consistency question the field's established methodology (BorderLines)
 is built around, without requiring parallel scoring machinery.
 
+**Reasoning-trace audit trail (added 2026-09-12).** A model's stated final
+answer to a contested item can be diplomatically even-handed while its
+*reasoning en route to that answer* reveals a one-sided framing the final
+text itself doesn't show — a risk this study's own reasoning-mode testing
+(ADR 0010) makes concretely relevant, not merely hypothetical, for
+contested items specifically. Wherever a reasoning trace is captured
+(`scoring/rubric.py`'s `ScoredResponse.reasoning_trace`, preserved rather
+than discarded once used for matching, 8.4 step 2), it is included in the
+record for every Set B item under the contested-claims/institutional-
+criticism-tolerance gate (11.4/11.5) and reviewed alongside the final
+answer during the periodic manual/LLM-judge audit (8.7) — not treated as
+disposable scratch work. This has a real, stated capture gap, not a
+theoretical one: a backend that returns reasoning in a genuinely separate
+API field rather than embedded in the response text behind `<think>` tags
+(llama.cpp's `reasoning_content`, confirmed 2026-09-12, Limitations 12.10)
+is not captured by this mechanism at all — stock lm-eval-harness's own
+response parsing discards that field before it ever reaches
+`--log_samples`. Closing that gap is tied to Set D's own harness task
+construction (not yet built) and is tracked there, not solved here.
+
 ### 11.3 Sourcing Requirements for Contested Items
 
 Every jurisdiction referenced in a contested item requires its own

@@ -96,15 +96,20 @@ none of them duplicate content the Protocol already states authoritatively.
    ```
    If this fails, see the troubleshooting notes printed by the script itself
    before going any further.
-3. Run a tiny smoke test (5 items, one domain, one registered model):
+3. Run a tiny smoke test (5 items, one domain, one registered model) —
+   verified passing 2026-09-12:
    ```bash
    docker compose run --rm eval lm_eval --model local-chat-completions \
      --model_args base_url=http://host.docker.internal:11434/v1/chat/completions,model=llama3.2:1b,num_concurrent=1 \
+     --apply_chat_template \
      --tasks mmlu_prox_en_biology \
      --limit 5 \
      --output_path /results/smoke_test_mmlu_prox_en
    ```
-   The model used here is one of the registered candidates
+   `--apply_chat_template` is required — without it, this lm-eval-harness
+   version rejects `local-chat-completions` with an assertion error; not
+   mentioned in this project's earlier documentation, found only once this
+   command was actually run. The model used here is one of the registered candidates
    (`docs/MODEL_REGISTER.md`), within the size band Protocol 7.4 sets. The
    task targets MMLU-ProX, which has a working stock harness task
    (Protocol 9.2). `host.docker.internal` is used because Ollama runs
@@ -112,18 +117,21 @@ none of them duplicate content the Protocol already states authoritatively.
    service (see `docker/Dockerfile`'s header comment and the
    `extra_hosts` entry in `docker-compose.yml`; Protocol 9.2 documents
    this).
-4. A parallel smoke test for MGSM-Rev2 (custom task, ADR 0008), once the
-   corpus exists beyond Appendix A's starter content:
+4. A parallel smoke test for MGSM-Rev2 (custom task, ADR 0008) — verified
+   passing 2026-09-12:
    ```bash
    docker compose run --rm eval lm_eval --model local-chat-completions \
      --model_args base_url=http://host.docker.internal:11434/v1/chat/completions,model=llama3.2:1b,num_concurrent=1 \
+     --apply_chat_template \
      --include_path /configs/lm_eval_tasks \
      --tasks mgsm_rev2_direct_de \
      --limit 5 \
      --output_path /results/smoke_test_mgsm_rev2_de
    ```
    See `configs/lm_eval_tasks/mgsm_rev2/README.md` for what has and hasn't
-   been independently verified about this task yet.
+   been independently verified about this task yet. This project's own
+   curated corpus rows run through `configs/lm_eval_tasks/corpus_*/`
+   instead (ADR 0009) — see each family's own README there.
 5. Set D (RQ4, tool-calling) is routed to llama.cpp instead of Ollama —
    see ADR 0001 and Protocol 9.2. Bring the `llamacpp` compose service up
    first (a GGUF model must be placed in `models/` beforehand — see
@@ -132,43 +140,79 @@ none of them duplicate content the Protocol already states authoritatively.
    docker compose up -d llamacpp
    docker compose run --rm eval bash scripts/check_llamacpp_connectivity.sh
    ```
-   Only one backend can hold the GPU at a time on this project's target
-   hardware (8GB VRAM) — stop Ollama-serving runs before starting a Set D
-   run, not the other way round (Protocol 9.2).
+   Verified working end-to-end 2026-09-12, including a real tool-calling
+   request against the registered Qwen3 4B candidate (Limitations 12.10) —
+   done in a dedicated second WSL2 distro for isolation from other
+   projects sharing the same machine (the `.wslconfig` mirrored-networking
+   fix this whole pipeline depends on is WSL2-wide, so it needed no
+   repeating there). Only one backend can hold the GPU at a time on this
+   project's target hardware (8GB VRAM) — stop Ollama-serving runs before
+   starting a Set D run, not the other way round (Protocol 9.2).
 6. Results land in `results/smoke_test_mgsm_de/` on the Windows side, under
    this folder — nothing needs copying out of WSL2 or the container manually.
 
 ## Status
 
-This is scaffolding plus a complete draft protocol, produced for review
-before any real evaluation run. Nothing has been executed yet —
-`docker compose build` and every step under First Run needs to be run by
-you inside WSL2, since the bridge this project folder is reached through
-does not have Docker available and cannot drive it directly.
-
 The Study Protocol is complete apart from its own front matter (Section 1,
 deferred by request); its three pre-registration values (alpha, RQ6
 threshold, primary language) are confirmed by the study owner (Protocol
-10.3, 10.5). Two supporting pieces of infrastructure exist: a custom
-lm-evaluation-harness task for MGSM-Rev2
-(`configs/lm_eval_tasks/mgsm_rev2/`, ADR 0008) and a containerised
-llama.cpp backend with GPU passthrough for Set D
-(`docker/docker-compose.yml`'s `llamacpp` service), both documented at
-Protocol 9.2 and Limitations 12.8/12.10. Neither has been run end-to-end
-against a live model yet — that is ordinary pre-run verification,
-remaining before the pilot's first real run.
+10.3, 10.5).
 
-Corpus/item authoring has started: `corpus/v0.1/` (2026-09-08) holds the
-first real corpus release across all six item families; `corpus/v0.2/`
-(2026-09-09) supersedes v0.1's Set B and Set C only — expanded from one
-fact each to ten, every fact independently source-verified, and
-translated into German, Swahili and Bengali (translations reviewed by the
-study owner, 2026-09-11). Each version's own README states what's
-verified and what's a scoping choice rather than an oversight. This
-folder is under local git version control (`.gitignore` excludes
-`results/` at volume) with a clean working tree, and GitHub/GitLab
-remotes for public release and backup (`DATA_MANAGEMENT_PLAN.md`
-Sections 3, 5, 6). Known open items are tracked where they arise rather
-than repeated here: see `STUDY_PROTOCOL.md` Section 12 (Limitations) and
-`DATA_MANAGEMENT_PLAN.md` Section 6 (raw-response backup, once runs
-exist to back up).
+As of 2026-09-12, this is no longer scaffolding: the full pipeline has run
+end-to-end against a live model for the first time.
+
+- **Docker/Ollama pipeline**: built and verified (`docker compose build`,
+  both connectivity checks, both README smoke tests below all pass against
+  a live `llama3.2:1b`). Getting there required fixing a real WSL2/Docker
+  networking gap — see `docker-compose.yml`'s header comment.
+- **Custom lm-evaluation-harness tasks**: MGSM-Rev2
+  (`configs/lm_eval_tasks/mgsm_rev2/`, ADR 0008), plus — found necessary
+  only once real runs were inspected — tasks reading every other corpus
+  set directly (`configs/lm_eval_tasks/corpus_{a,b,c,e,f}/`, ADR 0009),
+  since neither the stock MMLU-ProX task nor MGSM-Rev2 actually ran
+  against this project's own curated corpus rows otherwise.
+- **The scoring rubric (Section 8)** is implemented as tested code
+  (`scoring/`, rubric-v0.3), not just prose — 43 tests, each keyed to a
+  specific worked example from `RUBRIC_CARDS.md` or the Protocol itself.
+- **The I/O layer** (`scoring/io.py`) joins harness `--log_samples`
+  output to the rubric, with 9.6's run-level provenance stamping.
+- **The Section 10 statistical analysis pipeline** (`analysis/`) is
+  implemented: McNemar's exact test, Clopper-Pearson intervals, Cochran's
+  Q, Holm-Bonferroni correction, the behavioural response profile (10.2),
+  the reliability metric (10.4), and RQ1/RQ2/RQ3/RQ6/RQ7 wired to scored
+  data (RQ4 awaits Set D infrastructure, below).
+- **GPU passthrough and Set D's tool-calling path** are verified working
+  (Limitations 12.10) — done in a second, dedicated WSL2 distro
+  (Ubuntu-24.04) for isolation from other projects sharing this machine.
+
+See `requirements.txt` for the local Python dependencies `scoring/` and
+`analysis/` need to run directly (`pip install -r requirements.txt`,
+`python -m pytest`, `python -m scoring.cli`, `python -m analysis.cli`) —
+separate from the `docker/` image, which only runs lm-evaluation-harness
+itself.
+
+**What's still open**, in the order it would likely get tackled: a real
+pilot run at actual corpus scale, with the 3-way replication Protocol 9.3
+specifies, across multiple languages/varieties and all seven registered
+candidate models (today's runs are still smoke-test scale — a handful of
+items against `llama3.2:1b`, mostly English-only — which is exactly why
+RQ1 and RQ7 currently report themselves skipped: there's no paired
+language/variety data yet to compare). A known, documented gap
+(`scoring/io.py`'s module docstring): stock lm-eval-harness doesn't
+surface a per-item error/timeout signal into `--log_samples` the way
+8.2/9.3 assume, so Infrastructure-Failure tagging can currently only catch
+an empty response, not an explicit harness-reported fault.
+
+Corpus/item authoring: `corpus/v0.1/` (2026-09-08) holds the first real
+corpus release across all six item families; `corpus/v0.2/` (2026-09-09)
+supersedes v0.1's Set B and Set C only — expanded from one fact each to
+ten, every fact independently source-verified, and translated into
+German, Swahili and Bengali (translations reviewed by the study owner,
+2026-09-11). Each version's own README states what's verified and what's
+a scoping choice rather than an oversight. This folder is under local git
+version control (`.gitignore` excludes `results/` at volume) with a clean
+working tree, and GitHub/GitLab remotes for public release and backup
+(`DATA_MANAGEMENT_PLAN.md` Sections 3, 5, 6). Known open items are
+tracked where they arise rather than repeated here: see
+`STUDY_PROTOCOL.md` Section 12 (Limitations) and `DATA_MANAGEMENT_PLAN.md`
+Section 6 (raw-response backup, once runs exist to back up).

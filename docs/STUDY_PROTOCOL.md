@@ -1229,19 +1229,38 @@ is applied to MGSM-Rev2-derived items. As with every licence reading in
 this document, this is the study owner's own determination, not
 independent legal advice (12.7).
 
-### 12.10 llama.cpp Containerisation (Resolved 2026-09-08); vLLM Still Not Built
+### 12.10 llama.cpp Containerisation and GPU Passthrough (Resolved 2026-09-12); vLLM Still Not Built
 
 The Backend Register (9.2) validates llama.cpp and vLLM as suitable
 alternate backends, required for Set D (RQ4, tool-calling).
-`docker/docker-compose.yml` now defines a `llamacpp` service with GPU
+`docker/docker-compose.yml` defines a `llamacpp` service with GPU
 passthrough and `--jinja` enabled for tool-calling support (9.2 has the
-detail), closing the gap for llama.cpp specifically. No vLLM container has
-been built; since llama.cpp alone is sufficient for Set D, this is not a
-blocker to running Set D, but the Backend Register's "Included" status for
-vLLM still reflects only that it was checked and found suitable, not that
-it is available as a running alternative. A GGUF model file must still be
-placed in `models/` (see that folder's README) before Set D can actually
-be run — a manual, deliberately-not-automated step, not an engineering gap.
+detail). GPU passthrough end-to-end (`nvidia-container-toolkit` installed
+and configured, Docker's `nvidia` runtime registered, the GPU visible
+inside the container via `nvidia-smi`) and the tool-calling path itself
+are now verified working (2026-09-12): a direct `/v1/chat/completions`
+request with a `tools` schema against the registered Qwen3 4B candidate
+(`models/model.gguf`) returned a correctly-formed `tool_calls` response.
+This work was done in a second, dedicated WSL2 distro (Ubuntu-24.04)
+rather than the distro used for other projects, for isolation — a fresh
+Docker install and image rebuild were needed there, but the WSL2 mirrored-
+networking fix (9.2, `docker-compose.yml`'s header comment) is WSL2-wide
+and needed no repeating.
+
+One finding from that verification, not yet acted on: the response
+included a separate `reasoning_content` field — Qwen3 4B defaulting to
+its "thinking" mode via llama.cpp's chat template. 9.3's Run Parameter
+Overrides table already requires Qwen3 to run in non-reasoning ("dialogue")
+mode for this pilot; that override is not yet configured for the llama.cpp
+backend specifically (only asserted as the intended default generally) and
+will need addressing once a Set D task/harness invocation is actually
+built — not a blocker to what's verified here, but a concrete follow-up
+item, not a hypothetical one.
+
+No vLLM container has been built; since llama.cpp alone is sufficient for
+Set D, this is not a blocker to running Set D, but the Backend Register's
+"Included" status for vLLM still reflects only that it was checked and
+found suitable, not that it is available as a running alternative.
 
 ---
 

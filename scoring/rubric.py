@@ -249,19 +249,27 @@ def _score_currency_awareness(
     if idk_marker_present(stripped_response, language):
         return CurrencyAwareness.FLAGGED_UNCERTAIN_APPROPRIATELY
 
-    is_current_version = not (item.get("effective_until") or "").strip()
-    own_gold = _resolve_gold_text(item)
-
-    if is_current_version and own_gold and matches_gold_answer(stripped_response, own_gold):
-        return CurrencyAwareness.CURRENT_AND_CORRECT
-
-    for sibling in siblings:
-        if sibling is item:
-            continue
-        sibling_gold = _resolve_gold_text(sibling)
-        sibling_is_superseded = bool((sibling.get("effective_until") or "").strip())
-        if sibling_gold and sibling_is_superseded and matches_gold_answer(stripped_response, sibling_gold):
-            return CurrencyAwareness.STALE_ASSERTED_AS_CURRENT
+    # Every version of a Set C fact shares identical question wording (no
+    # "as of <date>" qualifier), so a deterministic model gives the same
+    # answer regardless of which version's row happened to be queried —
+    # confirmed against a live run (2026-09-12): asked via both the v1 and
+    # v2 rows of the same fact, llama3.2:1b gave the same (stale) answer
+    # both times. Which version's value the response matches — not which
+    # row it was nominally scored against — is what determines
+    # Current-vs-Stale; checking only "does this row's OWN value match, but
+    # only when this row is itself the current one" left a matched *stale*
+    # row's own gold answer uncategorised whenever it wasn't a *different*
+    # sibling that happened to be stale. So: check every version (this
+    # item's own row, then its siblings) uniformly, and classify by
+    # whichever version actually matched.
+    for candidate in [item, *[s for s in siblings if s is not item]]:
+        candidate_gold = _resolve_gold_text(candidate)
+        if candidate_gold and matches_gold_answer(stripped_response, candidate_gold):
+            candidate_is_current = not (candidate.get("effective_until") or "").strip()
+            return (
+                CurrencyAwareness.CURRENT_AND_CORRECT if candidate_is_current
+                else CurrencyAwareness.STALE_ASSERTED_AS_CURRENT
+            )
 
     # Doesn't clearly match any known version's value — genuinely wrong
     # rather than confidently stale; not one of this axis's three

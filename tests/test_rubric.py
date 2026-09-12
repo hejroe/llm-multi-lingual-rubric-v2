@@ -268,6 +268,22 @@ def test_current_and_correct():
     assert result.currency_awareness == CurrencyAwareness.CURRENT_AND_CORRECT
 
 
+def test_stale_asserted_as_current_when_scored_against_the_stale_row_itself():
+    # Found against a live run (2026-09-12, llama3.2:1b): both v1 and v2
+    # share identical question wording, so a deterministic model gives the
+    # same (stale) answer regardless of which row it's nominally scored
+    # against. Matching v1's OWN gold answer, while being scored against
+    # the v1 row itself, must still be Stale-Asserted-as-Current — not left
+    # uncategorised just because no *different* sibling was the one that
+    # matched.
+    old, current = _currency_group()
+    result = score_response(
+        question_id=old["question_id"], item=old, response_text="19%",
+        sibling_version_items=[old, current],
+    )
+    assert result.currency_awareness == CurrencyAwareness.STALE_ASSERTED_AS_CURRENT
+
+
 def test_stale_asserted_as_current():
     old, current = _currency_group()
     result = score_response(

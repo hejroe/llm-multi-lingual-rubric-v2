@@ -827,11 +827,41 @@ Base parameters, applied uniformly unless a documented override applies
   recorded as a wrong answer as the original scoring did.
 - **Retry policy**: one retry on timeout before a response is tagged
   Infrastructure-Failure, distinguishing a transient network blip from a
-  persistent failure — the original repo had no retries at all.
+  persistent failure — the original repo had no retries at all. Actually
+  implemented (2026-09-12), not only stated: `scripts/robust_run.py` sets
+  `timeout=120,max_retries=2` as explicit `model_args` (found, on
+  inspection, that lm-eval-harness's own defaults — 300s, 3 retries — had
+  been silently in effect instead, since no documented command before this
+  set them). Stock lm-eval-harness itself has no mechanism to tag a
+  persistently-failing item and continue — a genuine failure crashes the
+  *entire* run instead (`lm_eval/models/api_models.py`'s retry-then-
+  reraise). Rather than patching that internal behaviour directly (judged
+  too fragile — it would couple this project to implementation details
+  likely to change on any upstream version bump), `robust_run.py` retries
+  the whole invocation on a crash via the harness's own public
+  `--use_cache` flag (already-completed items are never redundantly
+  re-queried), then reconciles the final output against each task's full
+  expected item set; anything that still never got a response is written
+  as an explicit empty-response stub (`*.missing.jsonl`, never mutating
+  the harness's own raw samples file, 5.7) — which `scoring/rubric.py`'s
+  existing empty-response check already tags Infrastructure-Failure, with
+  no further scoring-side changes needed. Verified live (2026-09-12)
+  against both a genuine transient-style and total-connection-failure
+  case; see `scripts/README.md`.
 - **Replication**: each item is queried 3 times per model per condition
   (language/variety/jurisdiction variant) in this pilot. This is a starting
-  point, not a ceiling — the original repo used no replication, meaning it
-  had no way to distinguish stochastic variation from a systematic result.
+  point, not a ceiling (ADR 0003) — the original repo used no replication,
+  meaning it had no way to distinguish stochastic variation from a
+  systematic result. Genuinely configurable, not just documented as such:
+  `scripts/replicate_run.py` accepts any replication count (a user
+  demonstrating answer stability for their own fine-tuned model against
+  their own rubric might reasonably want 100, not 3), running each
+  replicate as a fully independent re-query — its own `--use_cache`, its
+  own output subdirectory (`scripts/robust_run.py`'s own crash-retry-then-
+  reconcile applies within every one) — with the *same* seed across every
+  replicate, deliberately, so any variation observed is attributable to
+  the non-determinism this bullet already describes, not to a seed
+  difference confounding the comparison.
 - **System prompt**: none, uniformly, across every model and task. Stated
   here as a deliberate, uniform choice, not an unexamined default — each
   model's own tuning-time assumptions about system-prompt presence could

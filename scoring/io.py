@@ -12,16 +12,15 @@ file covers one whole language already, those siblings are simply the
 *other rows already in the same JSONL file*, grouped by a shared base-fact
 id derived from `question_id` (see `_base_fact_id`).
 
-Known gap, not fixed here: `local-chat-completions`'s own tenacity-based
-retry either succeeds silently or raises and crashes the whole `lm_eval`
-run — it does not surface a per-item error/timeout signal into
-`--log_samples` the way 8.2/9.3 assume. So `is_infrastructure_failure`
-(scoring/rubric.py) can currently only fire on an empty response, never on
-an explicit harness-reported error, for stock lm-eval-harness runs. A
-run-level crash still means every item after the failure is simply
-missing from the JSONL, which is visible by omission, but not tagged.
-Fixing this properly needs either a custom lm-eval-harness model wrapper
-or an external per-item retry harness — out of scope for this module.
+`local-chat-completions`'s own tenacity-based retry either succeeds
+silently or raises and crashes the whole `lm_eval` run — it does not
+surface a per-item error/timeout signal into `--log_samples` the way
+8.2/9.3 assume, so `is_infrastructure_failure` (scoring/rubric.py) only
+ever sees an empty response, never an explicit harness-reported error,
+from a *raw* harness invocation. Run evaluations through
+`scripts/robust_run.py` (not `lm_eval` directly) to close that gap — it
+reconciles a crashed run's still-missing items into explicit empty-
+response stubs this module already handles correctly.
 """
 
 from __future__ import annotations

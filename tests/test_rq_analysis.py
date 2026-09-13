@@ -6,6 +6,7 @@ pairwise follow-ups, Clopper-Pearson intervals).
 import pytest
 
 from analysis.rq_analysis import (
+    correct_primary_confirmatory_set,
     rq1_language_gap,
     rq2_jurisdiction_default,
     rq3_currency_descriptive,
@@ -53,6 +54,39 @@ def test_rq1_ignores_unpaired_rows():
     ]  # no matching baseline
     result = rq1_language_gap(en_rows, de_rows)
     assert result.n_pairs == 0
+
+
+def test_rq1_collapses_replicates_via_majority_vote_not_last_write_wins():
+    # Regression (2026-09-13): 3 replicates per item (9.3) on each side must
+    # collapse to ONE pair per item, not one pair per replicate (which would
+    # inflate n_pairs and break McNemar's independence assumption), and the
+    # collapsed outcome must not simply be whichever replicate loaded last.
+    en_rows = [
+        _row("A-1-en", "Correct"),
+        _row("A-1-en", "Correct"),
+        _row("A-1-en", "Incorrect-Guess"),  # 2/3 Correct -> majority Correct
+    ]
+    de_rows = [
+        _row("A-1-de", "Incorrect-Guess", language_variant_of="A-1-en"),
+        _row("A-1-de", "Incorrect-Guess", language_variant_of="A-1-en"),
+        _row(
+            "A-1-de", "Correct", language_variant_of="A-1-en"
+        ),  # 1/3 Correct -> majority Incorrect
+    ]
+    result = rq1_language_gap(en_rows, de_rows)
+    assert result.n_pairs == 1  # one item, not 3 (or 9)
+    assert result.condition_a_rate == 1.0  # en majority: Correct
+    assert result.condition_b_rate == 0.0  # de majority: Incorrect-Guess
+
+
+def test_rq1_majority_vote_tie_resolves_to_not_correct():
+    en_rows = [
+        _row("A-1-en", "Correct"),
+        _row("A-1-en", "Incorrect-Guess"),
+    ]  # 1/2 -> tie -> not Correct
+    de_rows = [_row("A-1-de", "Correct", language_variant_of="A-1-en")]
+    result = rq1_language_gap(en_rows, de_rows)
+    assert result.condition_a_rate == 0.0
 
 
 # --- RQ6 ---------------------------------------------------------------
@@ -132,6 +166,21 @@ def test_rq7_variety_triplet_no_variation_is_not_significant():
     assert result.pairwise_significant is None
 
 
+def test_rq7_collapses_replicates_via_majority_vote():
+    # Regression (2026-09-13): same independence-assumption fix as RQ1.
+    us_rows = [_row("A-1-en", "Correct"), _row("A-1-en", "Correct")]
+    uk_rows = [
+        _row("F-1-UK", "Correct", language_variant_of="A-1-en"),
+        _row("F-1-UK", "Incorrect-Guess", language_variant_of="A-1-en"),
+        _row("F-1-UK", "Incorrect-Guess", language_variant_of="A-1-en"),
+    ]  # majority: Incorrect-Guess
+    au_rows = [_row("F-1-AU", "Correct", language_variant_of="A-1-en")]
+
+    result = rq7_variety_triplet(us_rows, uk_rows, au_rows)
+    assert result.n_items == 1  # one item, not one pair per replicate
+    assert result.correct_rates == {"us": 1.0, "uk": 0.0, "au": 1.0}
+
+
 # --- RQ3 -----------------------------------------------------------------
 
 
@@ -185,3 +234,84 @@ def test_rq2_jurisdiction_default_hand_computed():
     assert result.specified_wrong_default_rate == 0.5
     # b=1 (ALC: unspecified wrong, specified not), c=1 (CRIM: specified wrong, unspecified not) -> symmetric
     assert result.mcnemar.p_value == 1.0
+
+
+def test_rq2_handles_multiple_jurisdiction_specified_variants_per_base_fact():
+    # Regression (2026-09-13): a base fact with N specified variants (5.5's
+    # own worked example, B-ALC-01, has UK and US) must produce N separate
+    # pairs against the shared unspecified outcome, not silently keep only
+    # whichever variant loaded last.
+    unspecified_rows = [
+        _row(
+            "B-ALC-01-unspecified-en",
+            "Fabrication",
+            jurisdiction_adaptation="Wrong-Jurisdiction-Default",
+        )
+    ]
+    specified_rows = [
+        _row(
+            "B-ALC-01-UK-en",
+            "Correct",
+            jurisdiction_adaptation="Correct-for-Jurisdiction",
+        ),
+        _row(
+            "B-ALC-01-US-en",
+            "Correct",
+            jurisdiction_adaptation="Correct-for-Jurisdiction",
+        ),
+    ]
+    result = rq2_jurisdiction_default(unspecified_rows, specified_rows)
+    assert result.n_pairs == 2  # both UK and US variants counted, not 1
+    assert result.unspecified_wrong_default_rate == 1.0
+    assert result.specified_wrong_default_rate == 0.0
+
+
+def test_rq2_collapses_replicates_of_the_same_variant_via_majority_vote():
+    unspecified_rows = [
+        _row(
+            "B-ALC-01-unspecified-en",
+            "Fabrication",
+            jurisdiction_adaptation="Wrong-Jurisdiction-Default",
+        ),
+        _row(
+            "B-ALC-01-unspecified-en",
+            "Correct",
+            jurisdiction_adaptation="Correct-for-Jurisdiction",
+        ),
+        _row(
+            "B-ALC-01-unspecified-en",
+            "Fabrication",
+            jurisdiction_adaptation="Wrong-Jurisdiction-Default",
+        ),  # 2/3 replicates wrong -> majority wrong
+    ]
+    specified_rows = [
+        _row(
+            "B-ALC-01-UK-en",
+            "Correct",
+            jurisdiction_adaptation="Correct-for-Jurisdiction",
+        )
+    ]
+    result = rq2_jurisdiction_default(unspecified_rows, specified_rows)
+    assert result.n_pairs == 1
+    assert result.unspecified_wrong_default_rate == 1.0
+
+
+# --- Primary confirmatory set correction (10.5) ---------------------------
+
+
+def test_correct_primary_confirmatory_set_applies_holm_bonferroni():
+    result = correct_primary_confirmatory_set(
+        {"RQ1": 0.01, "RQ2": 0.04, "RQ6": 0.20, "RQ7": 0.03}
+    )
+    assert result.labels == ["RQ1", "RQ2", "RQ6", "RQ7"]
+    assert result.raw_p_values == [0.01, 0.04, 0.20, 0.03]
+    # Holm-Bonferroni, alpha=0.05, 4 tests, sorted p-values [0.01,0.03,0.04,0.20]
+    # vs thresholds [0.0125,0.0167,0.025,0.05]: 0.01 rejects (<=0.0125), 0.03
+    # fails (>0.0167) and stops the step-down -> only RQ1 significant.
+    assert result.corrected_significant == [True, False, False, False]
+
+
+def test_correct_primary_confirmatory_set_empty_when_no_rq_available():
+    result = correct_primary_confirmatory_set({})
+    assert result.labels == []
+    assert result.corrected_significant == []

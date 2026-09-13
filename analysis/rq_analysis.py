@@ -3,6 +3,18 @@ scored rows `scoring.io.write_scored_jsonl` produces (each carrying
 `question_id`, `category`, the 8.3 overlay fields, and item-context fields
 including `language_variant_of` — the join key every pairing below uses).
 
+Every pairing function below collapses replicate rows (9.3's 3x
+replication; possibly more, ADR 0003) to one outcome per item *before*
+forming a pair, via `_aggregate_by_key`'s majority vote — found necessary
+2026-09-13 after review: with replicated data, keying a plain dict by
+`question_id` silently keeps only the last-loaded replicate for one side
+of a pair while the other side's loop still iterated every replicate row
+as its own pair, inflating `n_pairs` and violating the independence
+McNemar's exact test assumes. Reliability *across* those replicates is a
+separate, deliberately distinct metric (10.4, `analysis/reliability.py`)
+— this collapsing answers "was this item correct" for the RQ-level test,
+it does not also try to measure agreement, which is what 10.4 is for.
+
 RQ4 (tool-calling calibration) is not implemented here: it needs Set D
 responses with an actual tool-call signal, which the harness setup this
 project currently uses cannot capture (see scoring/io.py's module
@@ -14,6 +26,7 @@ not a statistical test of its own — no function here computes it.
 from __future__ import annotations
 
 from collections import defaultdict
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from analysis.stats import (
@@ -29,12 +42,32 @@ from analysis.stats import (
 _CORRECT_CATEGORIES = {"Correct", "Correct-Process"}
 
 
-def _index_by_question_id(rows: list[dict]) -> dict[str, dict]:
-    return {row["question_id"]: row for row in rows}
-
-
 def _is_correct(row: dict) -> bool:
     return row["category"] in _CORRECT_CATEGORIES
+
+
+def _majority_vote(values: list[bool]) -> bool:
+    """Strict majority; an even split (a tie) resolves to False — a hung
+    jury across replicates is not evidence of a definite positive outcome
+    either way, and this keeps the rule from depending on replicate order."""
+    return sum(values) * 2 > len(values)
+
+
+def _aggregate_by_key(
+    rows: list[dict],
+    key_fn: Callable[[dict], str | None],
+    predicate: Callable[[dict], bool],
+) -> dict[str, bool]:
+    """Collapse every row sharing the same `key_fn(row)` (typically several
+    replicates of the same item/condition, 9.3) to one boolean via majority
+    vote of `predicate(row)`. Rows whose key is `None` are dropped, not
+    counted."""
+    groups: dict[str, list[bool]] = defaultdict(list)
+    for row in rows:
+        key = key_fn(row)
+        if key is not None:
+            groups[key].append(predicate(row))
+    return {key: _majority_vote(values) for key, values in groups.items()}
 
 
 @dataclass
@@ -53,19 +86,21 @@ def rq1_language_gap(
     `other_language_rows` is the comparison language, paired via
     `language_variant_of` pointing back to `scored_rows`' question_ids.
     """
-    baseline_by_id = _index_by_question_id(scored_rows)
-    b = c = 0  # discordant pairs: b = baseline-correct/other-wrong, c = the reverse
-    n_pairs = 0
+    baseline_correct = _aggregate_by_key(
+        scored_rows, lambda r: r["question_id"], _is_correct
+    )
+    other_correct = _aggregate_by_key(
+        other_language_rows, lambda r: r.get("language_variant_of"), _is_correct
+    )
+
+    common_ids = sorted(set(baseline_correct) & set(other_correct))
+    n_pairs = len(common_ids)
+    b = c = 0
     baseline_correct_count = other_correct_count = 0
 
-    for other_row in other_language_rows:
-        variant_of = other_row.get("language_variant_of")
-        if variant_of not in baseline_by_id:
-            continue
-        baseline_row = baseline_by_id[variant_of]
-        n_pairs += 1
-        baseline_ok = _is_correct(baseline_row)
-        other_ok = _is_correct(other_row)
+    for qid in common_ids:
+        baseline_ok = baseline_correct[qid]
+        other_ok = other_correct[qid]
         baseline_correct_count += baseline_ok
         other_correct_count += other_ok
         if baseline_ok and not other_ok:
@@ -131,22 +166,19 @@ def rq7_variety_triplet(
     significant, per 10.3's stated procedure. UK/AU rows are paired back to
     their US originals via `language_variant_of`.
     """
-    us_by_id = _index_by_question_id(us_rows)
-    uk_by_variant = {r["language_variant_of"]: r for r in uk_rows}
-    au_by_variant = {r["language_variant_of"]: r for r in au_rows}
+    us_correct = _aggregate_by_key(us_rows, lambda r: r["question_id"], _is_correct)
+    uk_correct = _aggregate_by_key(
+        uk_rows, lambda r: r.get("language_variant_of"), _is_correct
+    )
+    au_correct = _aggregate_by_key(
+        au_rows, lambda r: r.get("language_variant_of"), _is_correct
+    )
 
-    matrix = []
-    common_ids = [
-        qid for qid in us_by_id if qid in uk_by_variant and qid in au_by_variant
+    common_ids = sorted(set(us_correct) & set(uk_correct) & set(au_correct))
+    matrix = [
+        [int(us_correct[qid]), int(uk_correct[qid]), int(au_correct[qid])]
+        for qid in common_ids
     ]
-    for qid in common_ids:
-        matrix.append(
-            [
-                int(_is_correct(us_by_id[qid])),
-                int(_is_correct(uk_by_variant[qid])),
-                int(_is_correct(au_by_variant[qid])),
-            ]
-        )
 
     n_items = len(matrix)
     correct_rates = {
@@ -230,37 +262,53 @@ def rq2_jurisdiction_default(
     paired outcome here is "did this response default to the wrong
     jurisdiction" (`Wrong-Jurisdiction-Default`, 8.3) for the unspecified
     variant, compared against the same indicator for its jurisdiction-
-    specified sibling (paired via the shared base-fact id derived the same
-    way `scoring.io._base_fact_id` does, since both variants share it).
+    specified sibling(s), paired via the shared base-fact id (the same
+    derivation `scoring.io._base_fact_id` uses).
+
+    A base fact can have *N* jurisdiction-specified siblings (5.5's
+    worked example, `B-ALC-01`, has two: UK and US) — each is its own
+    pairing against the shared unspecified outcome for that base fact,
+    not collapsed into a single "specified" summary per base fact. Found
+    2026-09-13: a plain `{base: row}` dict silently kept only the
+    last-loaded sibling, dropping the other from this confirmatory test
+    non-reproducibly (dependent on row order). Replicates of the *same*
+    variant (same question_id) are still collapsed via majority vote
+    first, same as every other RQ here.
     """
     from scoring.io import (
         _base_fact_id,
     )  # local import: analysis depends on scoring, not vice versa
 
-    specified_by_base = {}
-    for row in specified_rows:
-        base = _base_fact_id(row["question_id"])
-        if base:
-            specified_by_base[base] = row
+    def is_wrong_default(row: dict) -> bool:
+        return row.get("jurisdiction_adaptation") == "Wrong-Jurisdiction-Default"
+
+    unspecified_wrong_by_base = _aggregate_by_key(
+        unspecified_rows,
+        lambda r: _base_fact_id(r["question_id"]),
+        is_wrong_default,
+    )
+    # Collapse replicates of each *specific* jurisdiction variant first
+    # (same question_id => same variant), keeping distinct variants (e.g.
+    # -UK- vs -US-) as distinct entries.
+    specified_wrong_by_variant = _aggregate_by_key(
+        specified_rows, lambda r: r["question_id"], is_wrong_default
+    )
+    variant_base = {
+        row["question_id"]: _base_fact_id(row["question_id"]) for row in specified_rows
+    }
 
     b = c = 0
     n_pairs = 0
-    unspecified_wrong = specified_wrong = 0
+    unspecified_wrong_sum = specified_wrong_sum = 0
 
-    for row in unspecified_rows:
-        base = _base_fact_id(row["question_id"])
-        if base not in specified_by_base:
+    for variant_qid, specified_is_wrong in specified_wrong_by_variant.items():
+        base = variant_base[variant_qid]
+        if base not in unspecified_wrong_by_base:
             continue
-        specified_row = specified_by_base[base]
+        unspecified_is_wrong = unspecified_wrong_by_base[base]
         n_pairs += 1
-        unspecified_is_wrong = (
-            row.get("jurisdiction_adaptation") == "Wrong-Jurisdiction-Default"
-        )
-        specified_is_wrong = (
-            specified_row.get("jurisdiction_adaptation") == "Wrong-Jurisdiction-Default"
-        )
-        unspecified_wrong += unspecified_is_wrong
-        specified_wrong += specified_is_wrong
+        unspecified_wrong_sum += unspecified_is_wrong
+        specified_wrong_sum += specified_is_wrong
         if unspecified_is_wrong and not specified_is_wrong:
             b += 1
         elif specified_is_wrong and not unspecified_is_wrong:
@@ -268,7 +316,38 @@ def rq2_jurisdiction_default(
 
     return JurisdictionDefaultResult(
         n_pairs=n_pairs,
-        unspecified_wrong_default_rate=unspecified_wrong / n_pairs if n_pairs else 0.0,
-        specified_wrong_default_rate=specified_wrong / n_pairs if n_pairs else 0.0,
+        unspecified_wrong_default_rate=unspecified_wrong_sum / n_pairs
+        if n_pairs
+        else 0.0,
+        specified_wrong_default_rate=specified_wrong_sum / n_pairs if n_pairs else 0.0,
         mcnemar=mcnemar_exact(b, c),
+    )
+
+
+@dataclass
+class PrimarySetCorrection:
+    labels: list[str]
+    raw_p_values: list[float]
+    corrected_significant: list[bool]
+
+
+def correct_primary_confirmatory_set(
+    labeled_p_values: dict[str, float], alpha: float = 0.05
+) -> PrimarySetCorrection:
+    """10.5: the primary confirmatory set — one pre-selected test per RQ
+    (RQ1's primary language+domain, RQ2's primary language, RQ6's primary
+    language, RQ7's whole triplet, whichever of these are actually
+    available given the corpus built so far) — is Holm-Bonferroni
+    corrected together, family-wise. Found 2026-09-13: nothing previously
+    assembled this set; each RQ's p-value was read at alpha on its own,
+    which inflates the true family-wise error rate above 5% across the
+    four confirmatory tests, contrary to what 10.5 specifies. `caller`
+    decides which RQs are actually part of the set (per the corpus
+    currently available — see analysis/cli.py) and passes only those.
+    """
+    labels = list(labeled_p_values.keys())
+    p_values = [labeled_p_values[label] for label in labels]
+    significant = holm_bonferroni(p_values, alpha=alpha) if p_values else []
+    return PrimarySetCorrection(
+        labels=labels, raw_p_values=p_values, corrected_significant=significant
     )

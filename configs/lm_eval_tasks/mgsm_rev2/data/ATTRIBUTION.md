@@ -14,10 +14,14 @@ docs/STUDY_PROTOCOL.md Section 5.4.
 
 CC BY-SA 4.0 is a share-alike licence: any derivative work built from
 these files (this project's Set E perturbed twins, Set F variety
-transforms) must itself be released under CC BY-SA 4.0. Legal sign-off on
-this obligation is tracked as open in docs/STUDY_PROTOCOL.md Section 12.9
-and docs/DATA_MANAGEMENT_PLAN.md Section 5 — not yet obtained. Do not
-treat inclusion here as that sign-off.
+transforms) would ordinarily carry that obligation forward. Resolved
+2026-09-11: the study owner has determined that this project's own open
+publication under CC BY 4.0 (docs/DATA_MANAGEMENT_PLAN.md Section 5)
+satisfies that obligation, so no separate CC BY-SA 4.0 carve-out is
+applied to MGSM-Rev2-derived items — see docs/STUDY_PROTOCOL.md Section
+12.9 and the Source Register (5.4) for the full determination. As with
+every licence reading in this project, this is the study owner's own
+determination, not independent legal advice (12.7).
 
 Files:
 - mgsm_de.tsv, mgsm_sw.tsv, mgsm_bn.tsv, mgsm_en.tsv — question/answer

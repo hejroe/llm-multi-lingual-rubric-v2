@@ -224,7 +224,7 @@ end-to-end against a live model for the first time.
   since neither the stock MMLU-ProX task nor MGSM-Rev2 actually ran
   against this project's own curated corpus rows otherwise.
 - **The scoring rubric (Section 8)** is implemented as tested code
-  (`scoring/`, rubric-v0.3), not just prose — 43 tests, each keyed to a
+  (`scoring/`, rubric-v0.3), not just prose — 50 tests, each keyed to a
   specific worked example from `RUBRIC_CARDS.md` or the Protocol itself.
 - **The I/O layer** (`scoring/io.py`) joins harness `--log_samples`
   output to the rubric, with 9.6's run-level provenance stamping.

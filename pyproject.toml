@@ -1,0 +1,19 @@
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+
+[tool.ruff.lint]
+# E/W: pycodestyle (PEP-8), F: pyflakes, I: import order, UP: modernize
+# syntax for the target version, B: bugbear (common bug patterns), C4:
+# comprehension simplifications. Deliberately not enabling pydocstyle (D)
+# -- this project's docstring policy is "module header explains why the
+# file exists; function/class docstrings only where the behaviour isn't
+# obvious from the name and signature," which a blanket D rule set would
+# fight rather than enforce.
+select = ["E", "W", "F", "I", "UP", "B", "C4"]
+
+[tool.ruff.lint.per-file-ignores]
+# Test files commonly build long literal request/response fixtures inline;
+# forcing every one through the line-length limit hurts readability more
+# than it helps.
+"tests/*" = ["E501"]

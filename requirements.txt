@@ -4,5 +4,7 @@
 #
 #   pip install -r requirements.txt
 #   python -m pytest
+#   ruff check . && ruff format --check .
 pytest
 scipy
+ruff

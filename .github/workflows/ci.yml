@@ -1,0 +1,36 @@
+# Runs the same checks a contributor should run locally before opening a
+# PR: ruff (lint + format check, pyproject.toml's config) and the pytest
+# suite for scoring/ and analysis/. Matrix covers 3.10 (pyproject.toml's
+# declared floor) and 3.11 (docker/Dockerfile's pinned runtime) so a
+# passing run means both the minimum-supported and the actually-deployed
+# interpreter agree. Does not touch docker/ or lm-evaluation-harness
+# itself -- that requires a live model backend (Ollama/llama.cpp) and is
+# exercised manually per docs/STUDY_PROTOCOL.md, not on every push.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Lint (ruff check)
+        run: ruff check .
+      - name: Format check (ruff format)
+        run: ruff format --check .
+      - name: Test (pytest)
+        run: python -m pytest -q

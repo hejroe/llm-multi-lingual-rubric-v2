@@ -93,6 +93,8 @@ def build_lm_eval_args(args: argparse.Namespace) -> list[str]:
         lm_eval_args.append("--apply_chat_template")
     if args.limit is not None:
         lm_eval_args.extend(["--limit", str(args.limit)])
+    if args.gen_kwargs is not None:
+        lm_eval_args.extend(["--gen_kwargs", args.gen_kwargs])
     return lm_eval_args
 
 
@@ -248,6 +250,21 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--output_path", required=True)
     parser.add_argument("--apply_chat_template", action="store_true")
     parser.add_argument("--limit", type=float, default=None)
+    parser.add_argument(
+        "--gen_kwargs",
+        default=None,
+        help=(
+            "passed through verbatim to lm_eval's own --gen_kwargs (e.g. "
+            "Qwen3's llama.cpp reasoning-mode toggle, ADR 0010: a JSON "
+            "object like {chat_template_kwargs: {enable_thinking: false}}). "
+            "Found 2026-09-13: this script's argparse had no such option, "
+            "so scripts/run_pilot_qwen3_llamacpp.sh's non-reasoning "
+            "condition (the primary, pre-registered one, ADR 0010) crashed "
+            "with 'unrecognized arguments' before lm_eval was ever invoked "
+            "-- silently, since the reasoning condition (no --gen_kwargs) "
+            "succeeded and made the failure easy to miss on partial testing."
+        ),
+    )
     parser.add_argument(
         "--run-retries", type=int, default=3, help="whole-invocation retries on crash"
     )

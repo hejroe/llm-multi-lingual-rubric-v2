@@ -1,3 +1,7 @@
+"""Tests for scoring.keywords: language-aware IDK markers, definite-answer
+detection, and the fabrication (invented-detail) heuristic.
+"""
+
 from scoring.keywords import (
     has_definite_stated_answer,
     idk_marker_present,

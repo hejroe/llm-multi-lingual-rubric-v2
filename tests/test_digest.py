@@ -1,3 +1,8 @@
+"""Tests for scoring.io's model-digest auto-detection (5.7/9.6): Ollama's
+`/api/tags`, GGUF SHA256 hashing, and the backend-dispatch wrapper around
+both.
+"""
+
 import hashlib
 import json
 from unittest.mock import MagicMock, patch

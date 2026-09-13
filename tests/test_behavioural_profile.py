@@ -1,3 +1,7 @@
+"""Tests for analysis.behavioural_profile (Section 10.2's Behavioural
+Response Profile: per-category, per-language counts and overlay rates).
+"""
+
 from analysis.behavioural_profile import behavioural_profile, overlay_profile
 
 

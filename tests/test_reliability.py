@@ -1,3 +1,7 @@
+"""Tests for analysis.reliability (Section 10.4): cross-replicate
+agreement over N runs of the same (model, question) pair.
+"""
+
 from analysis.reliability import compute_reliability
 
 

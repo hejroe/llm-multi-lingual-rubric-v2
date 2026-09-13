@@ -1,3 +1,8 @@
+"""Tests for scoring.cli's `main` entry point: provenance construction
+from an aggregated results_*.json, the total-failure fallback path, and
+the scored-JSONL output it writes.
+"""
+
 import json
 
 from scoring.categories import PrimaryCategory

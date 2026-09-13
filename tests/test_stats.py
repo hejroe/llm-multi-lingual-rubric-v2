@@ -1,3 +1,7 @@
+"""Tests for analysis.stats: McNemar's exact test, Clopper-Pearson
+intervals, Cochran's Q, and Holm-Bonferroni correction.
+"""
+
 import math
 
 import pytest

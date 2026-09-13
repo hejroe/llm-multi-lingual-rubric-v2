@@ -1,3 +1,8 @@
+"""Tests for analysis.rq_analysis: the Section 10.3 RQ1-RQ7 statistical
+tests (McNemar pairs, Cochran's Q with Holm-Bonferroni-corrected
+pairwise follow-ups, Clopper-Pearson intervals).
+"""
+
 import pytest
 
 from analysis.rq_analysis import (

@@ -1,3 +1,8 @@
+"""Tests for scoring.matching: think-block stripping/extraction (Section
+11's reasoning-trace audit trail), variety-aware gold-answer matching, and
+arithmetic-working detection.
+"""
+
 from scoring.matching import (
     extract_think_blocks,
     matches_gold_answer,

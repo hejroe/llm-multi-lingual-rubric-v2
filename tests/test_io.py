@@ -1,3 +1,8 @@
+"""Tests for scoring.io: run-provenance construction (9.6), backend
+inference, fact-ID grouping for sibling items, and the JSONL scoring
+pipeline that ties them together.
+"""
+
 import json
 
 from scoring.categories import JurisdictionAdaptation, PrimaryCategory

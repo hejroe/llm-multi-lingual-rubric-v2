@@ -1,3 +1,8 @@
+"""Tests for scoring.rubric.score_response: the Section 8.4 decision
+logic across every category, confidence tier, and overlay (jurisdiction,
+currency, tool-invocation).
+"""
+
 from scoring.categories import (
     ConfidenceTier,
     CurrencyAwareness,

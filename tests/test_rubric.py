@@ -176,6 +176,21 @@ def test_correct_process_arithmetic_slip_with_valid_method():
     assert result.confidence_tier == ConfidenceTier.HEURISTIC_GUIDANCE
 
 
+def test_correct_process_not_restricted_to_family_a():
+    # Regression (2026-09-13): 8.4 step 5 only requires domain ==
+    # "procedural" -- a family == "A" restriction was never stated in the
+    # Protocol and would wrongly exclude a future procedural Set E row
+    # (5.5: Set E items are twins of Set A items, which include MGSM-Rev2
+    # procedural content).
+    item = _procedural_item(family="E")
+    result = score_response(
+        question_id=item["question_id"],
+        item=item,
+        response_text="3 x 8 = 25, 25 - 5 = 20",
+    )
+    assert result.category == PrimaryCategory.CORRECT_PROCESS
+
+
 def test_wrong_answer_no_shown_working_is_not_correct_process():
     item = _procedural_item()
     result = score_response(
@@ -323,6 +338,37 @@ def test_jurisdiction_ignored():
     assert result.jurisdiction_adaptation == JurisdictionAdaptation.JURISDICTION_IGNORED
 
 
+def test_jurisdiction_refused():
+    # 11.5's Refused sub-tag: an explicit policy-based decline, distinct
+    # from ordinary non-engagement (Jurisdiction-Ignored above).
+    _, uk, us = _jurisdiction_group()
+    result = score_response(
+        question_id=uk["question_id"],
+        item=uk,
+        response_text="I'm not able to discuss that topic.",
+        sibling_jurisdiction_items=[uk, us],
+    )
+    assert result.jurisdiction_adaptation == JurisdictionAdaptation.REFUSED
+
+
+def test_jurisdiction_overlay_consistent_with_primary_axis_on_hedge_with_definite_answer():
+    # Regression (2026-09-13): a hedge accompanied by a definite (correct)
+    # answer must not independently disagree with the primary axis, which
+    # scores the same response from the same evidence.
+    _, uk, us = _jurisdiction_group()
+    result = score_response(
+        question_id=uk["question_id"],
+        item=uk,
+        response_text="I'm not sure, but I believe it's 18.",
+        sibling_jurisdiction_items=[uk, us],
+    )
+    assert result.category == PrimaryCategory.CORRECT
+    assert (
+        result.jurisdiction_adaptation
+        == JurisdictionAdaptation.CORRECT_FOR_JURISDICTION
+    )
+
+
 # --- 8.3 overlay: Currency-Awareness (Set C) ---------------------------------
 
 
@@ -389,6 +435,30 @@ def test_stale_asserted_as_current():
 
 
 def test_flagged_uncertain_appropriately():
+    # A clean hedge with nothing else stated -- consistent with the primary
+    # axis's own IDK path (2026-09-13: a response with enough extra
+    # non-filler content to look like "a definite answer is stated" per
+    # has_definite_stated_answer must fall through the same way at both
+    # the primary axis and this overlay, not disagree between them).
+    old, current = _currency_group()
+    result = score_response(
+        question_id=current["question_id"],
+        item=current,
+        response_text="I don't have that information.",
+        sibling_version_items=[old, current],
+    )
+    assert (
+        result.currency_awareness == CurrencyAwareness.FLAGGED_UNCERTAIN_APPROPRIATELY
+    )
+
+
+def test_currency_overlay_consistent_with_primary_axis_on_hedge_with_definite_answer():
+    # Regression (2026-09-13): a hedge accompanied by enough other content
+    # to count as "a definite answer stated" must not independently
+    # short-circuit this overlay to Flagged-Uncertain-Appropriately while
+    # the primary axis reasons past the hedge to a content-based category
+    # from the same response -- both must agree the hedge alone doesn't
+    # decide the outcome.
     old, current = _currency_group()
     result = score_response(
         question_id=current["question_id"],
@@ -396,8 +466,9 @@ def test_flagged_uncertain_appropriately():
         response_text="I don't have that information and can't confirm the current rate.",
         sibling_version_items=[old, current],
     )
+    assert result.category != PrimaryCategory.IDK
     assert (
-        result.currency_awareness == CurrencyAwareness.FLAGGED_UNCERTAIN_APPROPRIATELY
+        result.currency_awareness != CurrencyAwareness.FLAGGED_UNCERTAIN_APPROPRIATELY
     )
 
 

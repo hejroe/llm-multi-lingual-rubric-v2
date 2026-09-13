@@ -50,6 +50,25 @@ def test_no_gold_answer_never_matches():
     assert not matches_gold_answer("Eighteen.", "")
 
 
+def test_numeric_gold_answer_does_not_match_embedded_in_a_larger_number():
+    # Regression (2026-09-13): a plain substring test made "18" match
+    # inside "1800s" or "218 dollars" -- exactly the shape Sets B (ages)
+    # and C (rates) use throughout, so this was a live false-positive
+    # risk, not a hypothetical one.
+    assert not matches_gold_answer("The law dates back to the 1800s.", "18")
+    assert not matches_gold_answer("It costs 218 dollars.", "18")
+    assert matches_gold_answer("You must be 18 to buy this.", "18")
+
+
+def test_numeric_gold_answer_with_trailing_symbol_still_matches():
+    # Regression (2026-09-13): a naive \b-based boundary check fails when
+    # the gold answer itself ends in a non-word character (e.g. "%"),
+    # since \b requires a word/non-word transition and neither side of
+    # "...25%" + end-of-string is a word character.
+    assert matches_gold_answer("25%", "25%")
+    assert matches_gold_answer("The rate is 25% this year.", "25%")
+
+
 def test_shows_arithmetic_working_detects_shown_steps():
     assert shows_arithmetic_working("3 x 8 = 25, 25 - 5 = 20")
     assert not shows_arithmetic_working("The answer is 20.")

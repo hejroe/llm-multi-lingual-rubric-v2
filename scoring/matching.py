@@ -97,13 +97,51 @@ def shows_arithmetic_working(response_text: str) -> bool:
     return bool(_ARITHMETIC_WORKING_RE.search(response_text))
 
 
+_NUMERIC_GOLD_RE = re.compile(r"^\d+%?$")
+
+
+def _contains_whole(haystack: str, needle: str) -> bool:
+    """Word-boundary-aware substring test: `needle` must not be embedded
+    inside a larger alphanumeric token in `haystack`. Checks the actual
+    characters adjacent to each candidate match, rather than regex `\\b`
+    (which fails whenever `needle` itself ends in a non-word character,
+    e.g. a percentage sign — `\\b` requires a word/non-word *transition*,
+    and neither side of "...25%" + end-of-string is a word character, so
+    `\\b` after `%` never matches at all — found via a real test failure,
+    2026-09-13, using exactly this shape of gold answer).
+    """
+    if not needle:
+        return False
+    start = 0
+    while True:
+        idx = haystack.find(needle, start)
+        if idx == -1:
+            return False
+        before_ok = idx == 0 or not haystack[idx - 1].isalnum()
+        end = idx + len(needle)
+        after_ok = end == len(haystack) or not haystack[end].isalnum()
+        if before_ok and after_ok:
+            return True
+        start = idx + 1
+
+
 def matches_gold_answer(response_text: str, gold_answer: str) -> bool:
     """8.4 step 3: does the (already think-stripped) response contain the
     gold answer, under accent-insensitive, variety-aware matching?
 
-    A plain substring test after normalisation, extended so a Set F item's
-    "wrong" variety spelling for a tracked word (Appendix A.2) is not itself
-    a mismatch (RUBRIC_CARDS.md's "Correct" card, common confusion).
+    Purely numeric gold answers (an age, a rate — Sets B/C's item shape
+    throughout) use a word-boundary-aware test (`_contains_whole`):
+    found necessary 2026-09-13, a plain `in` substring test made any
+    numeric gold answer a false-positive magnet ("18" matched inside
+    "1800s" or "218 dollars"). Everything else keeps a plain substring
+    test deliberately, including the variety-equivalents check below: a
+    Set F item's "wrong" variety spelling for a tracked word (Appendix
+    A.2) needs to match inside an inflected form too (e.g. "colour"
+    inside "coloured"/"colours"), which a whole-word test would reject
+    (RUBRIC_CARDS.md's "Correct" card, common confusion) — the
+    false-positive risk profile for a handful of common whole words is not
+    the same as for short numeric strings, which are far more likely to
+    appear embedded inside an unrelated larger number.
     """
     if not gold_answer:
         # Set B's unspecified-jurisdiction variant carries no gold_answer
@@ -112,11 +150,17 @@ def matches_gold_answer(response_text: str, gold_answer: str) -> bool:
 
     normalised_response = normalise_for_matching(response_text)
     normalised_gold = normalise_for_matching(gold_answer)
+    is_numeric = bool(_NUMERIC_GOLD_RE.match(normalised_gold))
 
-    if normalised_gold in normalised_response:
+    if is_numeric:
+        if _contains_whole(normalised_response, normalised_gold):
+            return True
+    elif normalised_gold in normalised_response:
         return True
 
     for variant in _variety_equivalents(normalised_gold):
+        if variant == normalised_gold:
+            continue  # already checked above; a numeric gold has no variants anyway
         if variant in normalised_response:
             return True
 

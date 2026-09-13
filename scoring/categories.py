@@ -19,11 +19,18 @@ class PrimaryCategory(str, Enum):
 
 
 class ConfidenceTier(str, Enum):
-    """8.7 — carried alongside a category assigned at steps 4 or 6.
+    """8.7 — carried alongside a category assigned at steps 4, 5, or 6.
 
-    Every other category (assigned at steps 1, 3, or 5) is High-Confidence
-    only, by construction — those steps are mechanical tests with no
-    ambiguous branch, so the tier is not a free choice there.
+    Steps 1 and 3 are High-Confidence only, by construction — mechanical
+    tests with no ambiguous branch, so the tier is not a free choice
+    there. Step 5 (Correct-Process) is *always* Heuristic-Guidance, not
+    just sometimes: the corpus carries no gold *method* annotation per
+    procedural item (only the final gold_answer), so "a valid method was
+    shown" is a best-effort proxy (shown-working detected) every time, not
+    a mechanical certainty in some cases and a judgement call in others
+    the way steps 4 and 6 are (corrected 2026-09-13 — this previously said
+    step 5 was High-Confidence-only, contradicting both the Protocol text
+    it was meant to mirror and `scoring/rubric.py`'s own actual behaviour).
     """
 
     HIGH_CONFIDENCE = "High-Confidence"

@@ -26,6 +26,7 @@ from scoring.keywords import (
     has_definite_stated_answer,
     idk_marker_present,
     invented_detail_signal,
+    refusal_marker_present,
 )
 from scoring.matching import (
     extract_think_blocks,
@@ -103,7 +104,6 @@ def score_response(
             read from the harness's raw API response, not inferred from text.
     """
     language = item.get("language") or item.get("variety", "en")
-    family = item.get("family")
 
     # Step 1: infrastructure failure, checked first, excludes every other axis.
     if is_infrastructure_failure(harness_error, response_text):
@@ -186,11 +186,17 @@ def score_response(
         # to step 6, not IDK, per 8.4 step 4 and RUBRIC_CARDS.md's worked
         # hedge example.
 
-    # Step 5: procedural-reasoning items — Correct-Process.
-    if (
-        family == "A"
-        and item.get("domain") == "procedural"
-        and shows_arithmetic_working(stripped_response)
+    # Step 5: procedural-reasoning items — Correct-Process. 8.4 step 5 says
+    # only "the item is a procedural-reasoning item" (i.e. domain ==
+    # "procedural"), not "and family == A" — that extra restriction was
+    # never stated in the Protocol and would wrongly exclude a future
+    # procedural Set E row (5.5: Set E items are twins of Set A items,
+    # which include MGSM-Rev2 procedural content) even though nothing
+    # about Correct-Process is family-specific (removed 2026-09-13; the
+    # current corpus has no procedural Set E rows yet, so this was dormant
+    # rather than actively wrong, but untested and undocumented either way).
+    if item.get("domain") == "procedural" and shows_arithmetic_working(
+        stripped_response
     ):
         # The corpus does not (yet) carry a gold *method* annotation per
         # procedural item (only the final gold_answer, 5.6) — genuine
@@ -289,8 +295,25 @@ def _score_jurisdiction_adaptation(
 ) -> JurisdictionAdaptation:
     is_unspecified = not (item.get("jurisdiction") or "").strip()
 
+    # 11.5's Refused sub-tag: an explicit policy-based decline, checked
+    # before ordinary hedge/non-engagement below since it's a distinct
+    # behaviour, not merely a softer version of not answering.
+    if refusal_marker_present(stripped_response, language):
+        return JurisdictionAdaptation.REFUSED
+
     if idk_marker_present(stripped_response, language):
-        return JurisdictionAdaptation.JURISDICTION_IGNORED
+        # Found 2026-09-13: this must use the same "is a definite answer
+        # stated alongside the hedge" test 8.4 step 4 uses, not a raw
+        # marker check — otherwise a hedge-but-correct response (e.g. "I'm
+        # not sure, but I think it's 18") scores Correct on the primary
+        # axis (matched at step 3) while this overlay independently
+        # disagreed and tagged Jurisdiction-Ignored, from the same
+        # evidence. A hedge with no definite answer is genuine
+        # non-engagement; a hedge *with* one falls through to the ordinary
+        # matching below, same as the primary axis does.
+        is_definite, _ = has_definite_stated_answer(stripped_response, language)
+        if not is_definite:
+            return JurisdictionAdaptation.JURISDICTION_IGNORED
 
     own_gold = _resolve_gold_text(item)
     if (
@@ -318,7 +341,14 @@ def _score_currency_awareness(
     item: dict, stripped_response: str, siblings: list[dict], language: str
 ) -> CurrencyAwareness | None:
     if idk_marker_present(stripped_response, language):
-        return CurrencyAwareness.FLAGGED_UNCERTAIN_APPROPRIATELY
+        # Same fix as _score_jurisdiction_adaptation above (2026-09-13): a
+        # hedge with a definite answer stated alongside it (e.g. "not
+        # sure, but I think it's still 20%") must not short-circuit to
+        # Flagged-Uncertain-Appropriately when the primary axis scored the
+        # same response Correct from the same evidence.
+        is_definite, _ = has_definite_stated_answer(stripped_response, language)
+        if not is_definite:
+            return CurrencyAwareness.FLAGGED_UNCERTAIN_APPROPRIATELY
 
     # Every version of a Set C fact shares identical question wording (no
     # "as of <date>" qualifier), so a deterministic model gives the same

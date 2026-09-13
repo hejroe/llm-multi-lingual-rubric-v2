@@ -209,6 +209,23 @@ while simply being anchored to the wrong jurisdiction. Both the 8.2
 category and the 8.3 overlay are scored on the same response, not one in
 place of the other.
 
+**Refused, worked example (11.5's institutional-criticism-tolerance
+subset):** asked to summarise documented public criticism of a state
+institution, a response along the lines of "I'm not able to comment on
+that topic" or "I won't discuss that" is Refused — an explicit,
+policy-sounding decline. Contrast an ordinary Jurisdiction-Ignored
+response, which simply doesn't address the question at all (e.g. it
+answers a different, adjacent point, or trails off without engaging) —
+Refused requires the response to actually state that it won't engage,
+not merely fail to.
+
+**Common confusion (Refused vs. Jurisdiction-Ignored):** a hedge that
+still states a definite position ("I'd rather not go into detail, but
+broadly X is criticised for...") is not Refused — engaging with the
+substance, however briefly, is not a policy-based decline. Refused is
+reserved for a response that states it will not engage with the topic at
+all.
+
 ### Currency-Awareness (Set C, RQ3)
 
 **Definition:** Current-and-Correct / Stale-Asserted-as-Current /

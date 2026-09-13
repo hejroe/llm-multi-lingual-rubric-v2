@@ -80,8 +80,27 @@ none of them duplicate content the Protocol already states authoritatively.
   curl -fsSL https://get.docker.com | sh
   sudo usermod -aG docker $USER   # then restart your WSL2 session
   ```
+- **WSL2 networking, set up on the Windows host before anything below will
+  actually connect** (added 2026-09-13 — previously only documented inside
+  `docker-compose.yml`'s header comment and the connectivity-check
+  script's own troubleshooting output, discovered only by hitting the
+  failure first):
+  - `%UserProfile%\.wslconfig` needs `[wsl2]` with `networkingMode=mirrored`
+    (then `wsl --shutdown` and restart your distro).
+  - Ollama needs `OLLAMA_HOST=0.0.0.0` set (Windows environment variable,
+    then restart Ollama) so it listens on more than just `localhost`.
+  - Windows Firewall needs an inbound rule allowing TCP port 11434 (Ollama's
+    default port) from the WSL2 virtual adapter.
+  - If step 2 below still fails after this, its own printed troubleshooting
+    output has the exact diagnostic commands.
 - Ollama running on Windows, with at least one model already pulled
-  (e.g. `ollama pull llama3:8b`).
+  (e.g. `ollama pull llama3.2:1b` — the model the smoke tests below
+  actually use).
+- For Set D (tool-calling, step 5 below) or any llama.cpp-backed run only:
+  the NVIDIA Container Toolkit installed and configured for Docker GPU
+  passthrough (`scripts/check_llamacpp_connectivity.sh`'s own
+  troubleshooting output has the exact check). Not needed for the
+  Ollama-backed smoke tests or Phase 1 of the full pilot.
 
 ## First run
 
@@ -148,8 +167,11 @@ none of them duplicate content the Protocol already states authoritatively.
    repeating there). Only one backend can hold the GPU at a time on this
    project's target hardware (8GB VRAM) — stop Ollama-serving runs before
    starting a Set D run, not the other way round (Protocol 9.2).
-6. Results land in `results/smoke_test_mgsm_de/` on the Windows side, under
-   this folder — nothing needs copying out of WSL2 or the container manually.
+6. Results land in `results/smoke_test_mmlu_prox_en/` and
+   `results/smoke_test_mgsm_rev2_de/` (corrected 2026-09-13 — this
+   previously named a directory, `smoke_test_mgsm_de/`, that neither
+   smoke test above actually writes to) on the Windows side, under this
+   folder — nothing needs copying out of WSL2 or the container manually.
 
 ## Running the full pilot
 
@@ -166,6 +188,20 @@ responses themselves are backed up separately per
 `scoring/score_pilot_run.py` scores every run in one pass. On modest
 hardware, `scripts/monitor_thermals.ps1` is worth running alongside —
 see its own entry in `scripts/README.md` for why.
+
+**Before running either phase, stage every model it needs** (added
+2026-09-13 — previously undocumented, so a Phase 1 run hit an Ollama
+"model not found" error one model at a time rather than failing fast with
+a clear list up front):
+
+- Ollama (Phase 1, `run_pilot_ollama_models.sh`): pull all five —
+  `ollama pull llama3.2:1b`, `smollm2:1.7b`, `gemma3n:e2b`, `llama3.2:3b`,
+  `phi4-mini`.
+- llama.cpp (Phase 2, `run_pilot_qwen3_llamacpp.sh`): place both Qwen3
+  GGUF files in `models/` — `model_qwen3_1.7b.gguf` and
+  `model_qwen3_4b.gguf` — see `models/README.md` for where to get each
+  one (including reusing Ollama's own already-downloaded blob for the
+  1.7B size, rather than a second download).
 
 ## Status
 

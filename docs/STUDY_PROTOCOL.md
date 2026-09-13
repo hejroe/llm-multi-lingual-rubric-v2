@@ -630,8 +630,13 @@ Checks are applied in this order, per response:
    overlay as well — independent of, and in addition to, any B/C overlay
    already applied, since `tool_required` is not itself a family value.
 
-Steps 4 and 6 additionally assign a confidence tier (High-Confidence /
-Heuristic-Guidance) alongside the category, per 8.7.
+Steps 4, 5 and 6 additionally assign a confidence tier (High-Confidence /
+Heuristic-Guidance) alongside the category, per 8.7. Step 5
+(Correct-Process) is always Heuristic-Guidance, never High-Confidence —
+corrected 2026-09-13; this previously said only steps 4 and 6 were
+tiered, contradicting the implementation and 8.7's own reasoning below,
+which already treats step 5's shown-working proxy as inherently a
+best-effort call, not a mechanical certainty.
 
 ### 8.5 Scoring Implementation Notes
 
@@ -659,11 +664,11 @@ data it operates on.
 
 ### 8.7 Automation Limits and Confidence Tiers
 
-Two decisions in 8.4 cannot be resolved by a purely mechanical test in
-every case: step 4's IDK-vs-wrong-answer branch, and step 6's
-Incorrect-Guess vs. Fabrication distinction. Rather than leaving these
-cases uncategorised pending manual review, every response carries a
-confidence tier alongside its category:
+Three decisions in 8.4 cannot be resolved by a purely mechanical test in
+every case: step 4's IDK-vs-wrong-answer branch, step 5's Correct-Process
+shown-working proxy, and step 6's Incorrect-Guess vs. Fabrication
+distinction. Rather than leaving these cases uncategorised pending manual
+review, every response carries a confidence tier alongside its category:
 
 - **High-Confidence** — the category was assigned by an unambiguous,
   mechanical test: an infrastructure error field is present; the final
@@ -686,6 +691,14 @@ confidence tier alongside its category:
     signal is weak or borderline (e.g. a plausible-sounding answer that is
     not clearly invented). The heuristic still commits to a tag, marked
     Heuristic-Guidance.
+  - *Correct-Process.* Unlike the two cases above, this one is not
+    sometimes-ambiguous — it is *always* Heuristic-Guidance. The corpus
+    carries no gold *method* annotation per procedural item (only the
+    final `gold_answer`, 5.6), so "a valid method was shown" is a
+    best-effort proxy (working shown at all, not that it is
+    demonstrably correct) every time a Correct-Process tag is assigned,
+    not a mechanical certainty in some instances and a judgement call in
+    others the way steps 4 and 6 are.
 
 Heuristic-Guidance is not a new response category — 8.2's category list
 remains exhaustive and unchanged. It is a confidence qualifier carried
@@ -747,7 +760,7 @@ sits behind `base_url` does not require a different harness setup.
 
 | Backend | Role | OpenAI-compatible API | Known gaps | Decision |
 |---|---|---|---|---|
-| Ollama | Pilot default | Yes | Compatibility layer omits `tool-choice`, `logprobs`, and `logit-bias` | Included — default for all runs except Set D |
+| Ollama | Pilot default | Yes | Compatibility layer omits `tool-choice`, `logprobs`, and `logit-bias`; its `think` parameter for reasoning-mode control is also not honoured (confirmed 2026-09-12) | Included — default for all runs except Set D **and Qwen3 (all sets, both sizes — see 9.3's override table and Limitations 12.11)** |
 | llama.cpp (`llama-server`) | Validated alternate | Yes, full field support | None documented | Included — used for Set D (RQ4), where `tool-choice` is required |
 | vLLM | Validated alternate | Yes, full field support | Heavier GPU/throughput profile than needed for edge-model testing | Included — available as a substitute for llama.cpp if needed |
 | LM Studio | Considered | No — GUI-oriented, no headless server suited to this pipeline | N/A | Excluded — not suited to a reproducible, containerised pipeline |
@@ -891,6 +904,7 @@ Base parameters, applied uniformly unless a documented override applies
 | Model | Parameter | Override | Reasoning |
 |---|---|---|---|
 | Qwen3 (all sizes) | Reasoning mode | Both non-reasoning ("dialogue") and reasoning ("thinking") mode are run, as separate conditions (ADR 0010) — non-reasoning is the *primary, pre-registered* condition every confirmatory RQ's comparison uses; reasoning-mode results are reported descriptively alongside, never pooled with it. | Non-reasoning mode alone kept Qwen3 comparable to every other tested model under the same fixed parameters, but is itself an artificial restriction away from how the model actually ships (confirmed 2026-09-12: Qwen3 4B defaults to reasoning mode via llama.cpp's chat template) and forecloses a genuinely interesting question this pilot can otherwise answer — does reasoning narrow the cross-lingual/jurisdiction/currency/tool-calibration error patterns RQ1-RQ4 measure? Revisited (this entry originally deferred that question to "once Section 10's analysis plan is written" — it now has been) and resolved by running both, per ADR 0010. |
+| Qwen3 (all sizes) | Backend | All of Qwen3's runs — every item family, both sizes, both reasoning conditions — use llama.cpp, not Ollama (the default for every other model, 9.2). | Ollama's OpenAI-compatible endpoint does not honour the `think` parameter the reasoning-mode override above needs (confirmed 2026-09-12/13); llama.cpp's `chat_template_kwargs: {enable_thinking: ...}` does. Added as its own override entry, separate from Reasoning mode above, because it is a distinct methodological cost: Qwen3's RQ1/RQ2/RQ3/RQ6/RQ7 comparisons against every other model are now confounded by backend/serving-stack choice as well as reasoning mode — the same category of limitation Set D already carries (ADR 0001), now also true of one full model family across every set. See Limitations 12.11. |
 
 *(This table starts near-empty deliberately — an override is added only
 when a specific, documented reason exists, not by default.)*
@@ -1240,11 +1254,20 @@ Limitations section in a document meant to be defended.
 ### 12.2 Statistical Power
 
 The pilot's item counts are deliberately small (coverage, not volume —
-5.1), which limits the power of the formal hypothesis tests in Section 10,
-particularly RQ3 (10.3, 10.5), where a null result may reflect
-insufficient sample size rather than a genuine absence of the effect.
-This is a limitation of this pilot's scale, not of the method, which is
-designed to expand (5.8) without changing shape.
+5.1), which limits the power of the formal hypothesis tests in Section 10.
+Corrected 2026-09-13 — this previously named RQ3 as the RQ most exposed to
+this risk, but 10.3 already exempts RQ3 from formal significance testing
+for exactly this reason (it is reported descriptively, with a
+Clopper-Pearson interval, never a significant/not-significant verdict).
+The RQs actually exposed to a misleadingly "not significant" result from
+low power are the ones that *do* render such a verdict — RQ1, RQ2, RQ6,
+and RQ7, via McNemar's exact test or Cochran's Q — since a null result
+there may reflect insufficient sample size rather than a genuine absence
+of the effect (e.g. McNemar's exact test with a single discordant pair,
+b=1, c=0, cannot be significant at any alpha this document uses,
+regardless of the true effect size, a real and plausible occurrence at
+this pilot's scale). This is a limitation of this pilot's scale, not of
+the method, which is designed to expand (5.8) without changing shape.
 
 ### 12.3 Scoring Automation
 
@@ -1341,6 +1364,32 @@ No vLLM container has been built; since llama.cpp alone is sufficient for
 Set D, this is not a blocker to running Set D, but the Backend Register's
 "Included" status for vLLM still reflects only that it was checked and
 found suitable, not that it is available as a running alternative.
+
+### 12.11 Qwen3 Backend Divergence (identified 2026-09-13)
+
+Found during review, not during design, which is itself worth stating
+plainly: Ollama's OpenAI-compatible endpoint was confirmed (2026-09-12) not
+to honour the `think` parameter ADR 0010's reasoning-mode conditions
+require. The fix adopted — routing all of Qwen3's traffic through
+llama.cpp instead (9.2's Backend Register, 9.3's Run Parameter Overrides
+table) — solves the reasoning-mode problem but introduces a second,
+previously undocumented confound: Qwen3 is now the only tested model
+family whose results, across every item family (not only Set D), come
+from a different backend than the rest of the Model Register (7.3). A
+cross-model difference observed for Qwen3 could reflect llama.cpp's own
+serving-stack behaviour (sampling implementation, chat templating) rather
+than a genuine model capability difference. This is the same category of
+limitation Set D already carries for every model (ADR 0001) — a backend
+difference sitting alongside, not replacing, the reasoning-mode difference
+ADR 0010 already discusses — just discovered later and covering more of
+the design than originally scoped. No mitigation beyond disclosure is
+applied in this pilot: building a working `enable_thinking`-equivalent
+toggle for Ollama, or running every other model through llama.cpp too for
+a fully backend-consistent comparison, are both legitimate options for a
+later corpus/protocol version (5.8, 7.5) but are out of scope for
+correcting after the fact here. Any RQ1/RQ2/RQ3/RQ6/RQ7 comparison
+involving Qwen3 should be read with this caveat attached, not as directly
+comparable to same-RQ results for every other model.
 
 ---
 

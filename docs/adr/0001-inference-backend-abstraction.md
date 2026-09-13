@@ -31,3 +31,13 @@ Ollama for the other sets, since the backend itself differs — this is
 stated as a limitation (12).
 Adding a new backend later only requires it to speak the OpenAI-compatible
 chat-completions schema; no other part of the pipeline is backend-specific.
+
+**Amended in effect, 2026-09-13 (see ADR 0010): Qwen3 is now a second,
+broader exception to "Ollama is the default backend for Sets A, B, C, E,
+and F."** Ollama's OpenAI-compatible endpoint does not support the
+`enable_thinking` toggle ADR 0010's reasoning-mode conditions need, so
+*all* of Qwen3's traffic — not only Set D — runs through llama.cpp
+instead. This is the same category of limitation as Set D's above
+(backend choice, not just reasoning mode, differs from every other tested
+model), just discovered later and covering more of the design than
+originally scoped here. See Limitations 12.11.

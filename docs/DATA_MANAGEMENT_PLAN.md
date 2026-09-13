@@ -18,7 +18,7 @@ long, or how it becomes reviewable or citable outside this project folder
 
 | Artefact | Produced by | Format | Approx. volume at pilot scale | Personal data? | Sensitive-topic data? |
 |---|---|---|---|---|---|
-| Corpus items (Sets A–F) | Sourcing and transformation procedures (5, 9.4) | JSON/JSONL, one record per item per the common schema (5.6) | Low hundreds of items at pilot scale (5.1/6.5/7.1's starting scale) | No | Only the Ethics Register subset (below) |
+| Corpus items (Sets A–F) | Sourcing and transformation procedures (5, 9.4) | CSV, one row per item per the common schema (5.6) — corrected 2026-09-13, this previously said JSON/JSONL, stale relative to `corpus/v0.1/`/`corpus/v0.2/`'s actual format | Low hundreds of items at pilot scale (5.1/6.5/7.1's starting scale) | No | Only the Ethics Register subset (below) |
 | Raw model responses | Harness runs against each candidate model (7.3/9.3) | JSONL, one line per (item, model, language, condition) per 9.6's run-level provenance capture | Scales with corpus × models × languages × conditions; still pilot scale | No | No |
 | Scored/annotated data | Rubric application (Section 8) over raw responses | JSONL/CSV, rubric category and overlay-axis tags appended to each response record | Same row count as raw responses | No | No |
 | Amendment Log (13) and Ethics Register (11.4) entries | Manual, by the study owner | Markdown tables within `STUDY_PROTOCOL.md` | Small, append-only | No | Yes — sovereignty disputes and institutional-criticism/lese-majeste items (Protocol Section 11); not personally identifiable, but politically/ethically sensitive by subject matter, which is why Section 11's review gate exists |
@@ -35,10 +35,14 @@ Protocol Section 11, not by this plan.
 ## 3. Storage During the Project
 
 Working copies live in this project folder (`llm-multi-lingual-rubric-v2/`),
-under `results/` for run outputs (per the existing `README.md`) and a
-corpus directory to be created under `data/` once item authoring begins —
-not yet built, since Section 5 and Appendix A are schema and starter
-content only at this stage.
+under `results/` for run outputs (per the existing `README.md`) and
+`corpus/` for corpus items (`corpus/v0.1/`, `corpus/v0.2/`, versioned per
+5.8) — corrected 2026-09-13, this previously said a corpus directory was
+"to be created under `data/`... not yet built," stale relative to both
+versions actually existing at the repository root since 2026-09-08, under
+`corpus/`, not `data/` (the latter holds only `models/`'s GGUF weights and
+`scoring/data/`'s machine-readable marker/conversion lists, unrelated to
+the corpus itself).
 
 Version control: a local git repository is initialised in this project
 folder (`git init`, default branch `main`, with a `.gitignore` excluding

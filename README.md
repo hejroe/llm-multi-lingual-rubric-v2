@@ -151,6 +151,22 @@ none of them duplicate content the Protocol already states authoritatively.
 6. Results land in `results/smoke_test_mgsm_de/` on the Windows side, under
    this folder — nothing needs copying out of WSL2 or the container manually.
 
+## Running the full pilot
+
+Once the smoke tests above pass, the actual pilot run (full corpus, all
+registered candidates, 9.3's replication) is scripted rather than run by
+hand — see `scripts/README.md` for `run_pilot_ollama_models.sh` (every
+Ollama-backed candidate) and `run_pilot_qwen3_llamacpp.sh` (both Qwen3
+sizes, routed through llama.cpp for genuine reasoning-mode control, ADR
+0010). Both write into `results/pilot/`, which stays out of git
+(`.gitignore`) regardless of scale — only the scripts, tasks, and scoring
+code that produce and consume that data are version-controlled; the raw
+responses themselves are backed up separately per
+`DATA_MANAGEMENT_PLAN.md` Section 6. Once both phases finish,
+`scoring/score_pilot_run.py` scores every run in one pass. On modest
+hardware, `scripts/monitor_thermals.ps1` is worth running alongside —
+see its own entry in `scripts/README.md` for why.
+
 ## Status
 
 The Study Protocol is complete apart from its own front matter (Section 1,
@@ -191,17 +207,23 @@ See `requirements.txt` for the local Python dependencies `scoring/` and
 separate from the `docker/` image, which only runs lm-evaluation-harness
 itself.
 
-**What's still open**, in the order it would likely get tackled: a real
-pilot run at actual corpus scale, with the 3-way replication Protocol 9.3
-specifies, across multiple languages/varieties and all seven registered
-candidate models (today's runs are still smoke-test scale — a handful of
-items against `llama3.2:1b`, mostly English-only — which is exactly why
-RQ1 and RQ7 currently report themselves skipped: there's no paired
-language/variety data yet to compare). A known, documented gap
-(`scoring/io.py`'s module docstring): stock lm-eval-harness doesn't
-surface a per-item error/timeout signal into `--log_samples` the way
-8.2/9.3 assume, so Infrastructure-Failure tagging can currently only catch
-an empty response, not an explicit harness-reported fault.
+**What's still open**: a real pilot run at actual corpus scale, with the
+3-way replication Protocol 9.3 specifies, across all seven registered
+candidate models, is now scripted (`scripts/run_pilot_ollama_models.sh`,
+`scripts/run_pilot_qwen3_llamacpp.sh` — see "Running the full pilot"
+above) but has not yet completed end-to-end: today's dev hardware has hit
+repeated whole-machine unresponsiveness partway through (plausibly
+thermal/resource contention on a laptop GPU, not a pipeline defect —
+`run_pilot_ollama_models.sh`'s own header comment has the investigation),
+so the full run to date is still incomplete, resumable via `--use_cache`
+each time it's restarted. Until it completes, RQ1 and RQ7 report
+themselves skipped: there's no paired language/variety data yet to
+compare. A known, documented gap (`scoring/io.py`'s module docstring):
+stock lm-eval-harness doesn't surface a per-item error/timeout signal into
+`--log_samples` the way 8.2/9.3 assume, so Infrastructure-Failure tagging
+can currently only catch an empty response, not an explicit
+harness-reported fault (this is exactly what `scripts/robust_run.py`
+reconciles against each task's expected item set instead).
 
 Corpus/item authoring: `corpus/v0.1/` (2026-09-08) holds the first real
 corpus release across all six item families; `corpus/v0.2/` (2026-09-09)

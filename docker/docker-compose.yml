@@ -66,14 +66,19 @@ services:
     image: ghcr.io/ggml-org/llama.cpp:server-cuda
     volumes:
       - ../models:/models
-    # Point -m at whichever GGUF file you've placed in ../models — see
-    # models/README.md for how to obtain one matching a registered
-    # candidate (docs/MODEL_REGISTER.md). --jinja is required for
-    # OpenAI-style tool/function calling (llama.cpp server docs,
-    # docs/function-calling.md) — without it, Set D's tool-choice
-    # requests will not work even though the endpoint otherwise responds.
+    # Which GGUF to serve is set via LLAMACPP_MODEL (default:
+    # model_qwen3_4b.gguf), so switching between registered Qwen3 sizes
+    # (7.3: 1.7B and 4B, both routed through llama.cpp rather than Ollama —
+    # see docs/adr/0010-qwen3-reasoning-mode-both-conditions.md for why)
+    # only needs an env var and a `docker compose up -d llamacpp`, not
+    # editing this file. Place matching GGUFs in ../models — see
+    # models/README.md. --jinja is required for OpenAI-style tool/function
+    # calling (llama.cpp server docs, docs/function-calling.md) and for
+    # chat_template_kwargs (e.g. enable_thinking) to reach the model's own
+    # chat template — without it, neither works even though the endpoint
+    # otherwise responds.
     command: >
-      -m /models/model.gguf
+      -m /models/${LLAMACPP_MODEL:-model_qwen3_4b.gguf}
       --host 0.0.0.0 --port 8080
       --jinja
       --n-gpu-layers 999

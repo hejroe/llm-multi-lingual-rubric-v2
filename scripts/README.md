@@ -81,3 +81,64 @@
   replicate is a fully independent re-query (own `--use_cache`, own
   output directory) with the *same* seed as every other run in this
   project, deliberately — see the module's own docstring for why.
+
+- `run_pilot_ollama_models.sh` — Phase 1 of the first full pilot run: every
+  Ollama-backed registered candidate (7.3) except the two Qwen3 sizes,
+  across the full corpus (every `corpus_*` task, ADR 0009), replicated 3
+  times each (9.3), via `replicate_run.py`. Run from the `docker/`
+  directory in WSL2, **not** inside the container (it invokes `docker
+  compose run` itself once per model):
+
+  ```bash
+  cd docker
+  bash ../scripts/run_pilot_ollama_models.sh
+  ```
+
+  Sequential by design — one model at a time, `num_concurrent=1` — after
+  a real incident (2026-09-13) where higher concurrency coincided with
+  the whole machine becoming unresponsive, plausibly resource contention
+  rather than genuine parallelism on modest hardware. A `COOLDOWN_SECONDS`
+  pause (default 45, override via env var) runs between models for the
+  same reason. None of this changes what's being measured — Protocol 9.3
+  already treats batched-inference non-determinism, concurrency included,
+  as a documented variability source that the pilot's own 3x replication
+  measures, not a methodological violation.
+
+- `run_pilot_qwen3_llamacpp.sh` — Phase 2: both registered Qwen3 sizes,
+  routed through llama.cpp instead of Ollama specifically so reasoning
+  mode can be controlled (ADR 0010) — Ollama's OpenAI-compatible endpoint
+  was confirmed (2026-09-12) to ignore the `think` parameter entirely.
+  Run the same way as Phase 1, after it completes (both scripts want the
+  GPU). Switches the `llamacpp` compose service between the two GGUF
+  sizes itself (`models/README.md`) and waits for its health check before
+  each condition:
+
+  ```bash
+  cd docker
+  bash ../scripts/run_pilot_qwen3_llamacpp.sh
+  ```
+
+  Each size runs both conditions (reasoning enabled/disabled) via
+  llama.cpp's `chat_template_kwargs: {enable_thinking: ...}` — the
+  mechanism that actually works, unlike Ollama's `think` parameter above
+  — 3 replicates each, same as Phase 1.
+
+- `monitor_thermals.ps1` — optional background watchdog for either phase
+  above: logs CPU%, free RAM, and GPU temp/utilization/power draw every
+  30s to `results/thermal_log.csv`. Read-only, takes no action on the
+  system. Run from an ordinary PowerShell window left open for the
+  pilot's duration:
+
+  ```powershell
+  powershell -File scripts\monitor_thermals.ps1
+  ```
+
+  Written after a real incident where request-timing became erratic
+  shortly before the machine became unresponsive; the log gives a
+  timestamped record to diagnose against if it happens again, instead of
+  a single post-hoc snapshot.
+
+Once Phase 1 (and Phase 2, if running Qwen3) complete, see
+`scoring/score_pilot_run.py` (module docstring) to score every run in one
+pass rather than calling `scoring.cli` once per model/replicate/condition
+by hand.

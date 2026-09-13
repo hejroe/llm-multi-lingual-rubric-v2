@@ -27,7 +27,11 @@ from scoring.keywords import (
     idk_marker_present,
     invented_detail_signal,
 )
-from scoring.matching import extract_think_blocks, matches_gold_answer, shows_arithmetic_working
+from scoring.matching import (
+    extract_think_blocks,
+    matches_gold_answer,
+    shows_arithmetic_working,
+)
 
 
 @dataclass
@@ -62,7 +66,9 @@ def _resolve_gold_text(item: dict) -> str:
     return gold
 
 
-def is_infrastructure_failure(harness_error: str | None, response_text: str | None) -> bool:
+def is_infrastructure_failure(
+    harness_error: str | None, response_text: str | None
+) -> bool:
     """8.4 step 1 / 8.2: an API error, timeout, or empty response — checked
     first, from the harness's own error/empty-body signal, never from text
     that merely talks about an error (RUBRIC_CARDS.md's Infrastructure-
@@ -123,14 +129,22 @@ def score_response(
             confidence_tier=ConfidenceTier.HIGH_CONFIDENCE,
         )
         _apply_overlays(
-            result, item, stripped_response, sibling_jurisdiction_items,
-            sibling_version_items, tool_call_invoked, language, reasoning_trace,
+            result,
+            item,
+            stripped_response,
+            sibling_jurisdiction_items,
+            sibling_version_items,
+            tool_call_invoked,
+            language,
+            reasoning_trace,
         )
         return result
 
     # Step 4: IDK, unless a definite stated alternative answer accompanies it.
     if idk_marker_present(stripped_response, language):
-        is_definite, is_ambiguous = has_definite_stated_answer(stripped_response, language)
+        is_definite, is_ambiguous = has_definite_stated_answer(
+            stripped_response, language
+        )
         if not is_definite and not is_ambiguous:
             result = ScoredResponse(
                 question_id=question_id,
@@ -138,8 +152,13 @@ def score_response(
                 confidence_tier=ConfidenceTier.HIGH_CONFIDENCE,
             )
             _apply_overlays(
-                result, item, stripped_response, sibling_jurisdiction_items,
-                sibling_version_items, tool_call_invoked, language,
+                result,
+                item,
+                stripped_response,
+                sibling_jurisdiction_items,
+                sibling_version_items,
+                tool_call_invoked,
+                language,
             )
             return result
         if is_ambiguous:
@@ -149,11 +168,18 @@ def score_response(
                 question_id=question_id,
                 category=PrimaryCategory.IDK,
                 confidence_tier=ConfidenceTier.HEURISTIC_GUIDANCE,
-                notes=["idk-vs-wrong-answer: partial non-specific attempt alongside hedge"],
+                notes=[
+                    "idk-vs-wrong-answer: partial non-specific attempt alongside hedge"
+                ],
             )
             _apply_overlays(
-                result, item, stripped_response, sibling_jurisdiction_items,
-                sibling_version_items, tool_call_invoked, language,
+                result,
+                item,
+                stripped_response,
+                sibling_jurisdiction_items,
+                sibling_version_items,
+                tool_call_invoked,
+                language,
             )
             return result
         # is_definite: a stated alternative answer is present — fall through
@@ -161,7 +187,11 @@ def score_response(
         # hedge example.
 
     # Step 5: procedural-reasoning items — Correct-Process.
-    if family == "A" and item.get("domain") == "procedural" and shows_arithmetic_working(stripped_response):
+    if (
+        family == "A"
+        and item.get("domain") == "procedural"
+        and shows_arithmetic_working(stripped_response)
+    ):
         # The corpus does not (yet) carry a gold *method* annotation per
         # procedural item (only the final gold_answer, 5.6) — genuine
         # method-validity, as opposed to merely "some working shown", isn't
@@ -174,11 +204,20 @@ def score_response(
             question_id=question_id,
             category=PrimaryCategory.CORRECT_PROCESS,
             confidence_tier=ConfidenceTier.HEURISTIC_GUIDANCE,
-            notes=["procedural item: shown working detected, method validity not independently verified"],
+            notes=[
+                "procedural item: shown working detected, method validity "
+                "not independently verified"
+            ],
         )
         _apply_overlays(
-            result, item, stripped_response, sibling_jurisdiction_items,
-            sibling_version_items, tool_call_invoked, language, reasoning_trace,
+            result,
+            item,
+            stripped_response,
+            sibling_jurisdiction_items,
+            sibling_version_items,
+            tool_call_invoked,
+            language,
+            reasoning_trace,
         )
         return result
 
@@ -186,12 +225,28 @@ def score_response(
     found_invented_detail, is_clear_cut = invented_detail_signal(
         stripped_response, item.get("question_text", ""), language
     )
-    category = PrimaryCategory.FABRICATION if found_invented_detail else PrimaryCategory.INCORRECT_GUESS
-    tier = ConfidenceTier.HIGH_CONFIDENCE if is_clear_cut else ConfidenceTier.HEURISTIC_GUIDANCE
-    result = ScoredResponse(question_id=question_id, category=category, confidence_tier=tier)
+    category = (
+        PrimaryCategory.FABRICATION
+        if found_invented_detail
+        else PrimaryCategory.INCORRECT_GUESS
+    )
+    tier = (
+        ConfidenceTier.HIGH_CONFIDENCE
+        if is_clear_cut
+        else ConfidenceTier.HEURISTIC_GUIDANCE
+    )
+    result = ScoredResponse(
+        question_id=question_id, category=category, confidence_tier=tier
+    )
     _apply_overlays(
-        result, item, stripped_response, sibling_jurisdiction_items,
-        sibling_version_items, tool_call_invoked, language, reasoning_trace,
+        result,
+        item,
+        stripped_response,
+        sibling_jurisdiction_items,
+        sibling_version_items,
+        tool_call_invoked,
+        language,
+        reasoning_trace,
     )
     return result
 
@@ -221,7 +276,8 @@ def _apply_overlays(
         )
     if item.get("tool_required") == "yes" and tool_call_invoked is not None:
         result.tool_invocation = (
-            ToolInvocationCalibration.INVOKED_CORRECTLY if tool_call_invoked
+            ToolInvocationCalibration.INVOKED_CORRECTLY
+            if tool_call_invoked
             else ToolInvocationCalibration.UNDER_INVOKED
         )
     elif item.get("tool_required") == "no" and tool_call_invoked:
@@ -237,7 +293,11 @@ def _score_jurisdiction_adaptation(
         return JurisdictionAdaptation.JURISDICTION_IGNORED
 
     own_gold = _resolve_gold_text(item)
-    if not is_unspecified and own_gold and matches_gold_answer(stripped_response, own_gold):
+    if (
+        not is_unspecified
+        and own_gold
+        and matches_gold_answer(stripped_response, own_gold)
+    ):
         return JurisdictionAdaptation.CORRECT_FOR_JURISDICTION
 
     for sibling in siblings:
@@ -278,7 +338,8 @@ def _score_currency_awareness(
         if candidate_gold and matches_gold_answer(stripped_response, candidate_gold):
             candidate_is_current = not (candidate.get("effective_until") or "").strip()
             return (
-                CurrencyAwareness.CURRENT_AND_CORRECT if candidate_is_current
+                CurrencyAwareness.CURRENT_AND_CORRECT
+                if candidate_is_current
                 else CurrencyAwareness.STALE_ASSERTED_AS_CURRENT
             )
 

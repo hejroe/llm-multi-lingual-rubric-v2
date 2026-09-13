@@ -28,10 +28,25 @@ def test_disagreement_across_replicates():
 
 def test_grouped_by_additional_condition():
     rows = [
-        {"question_id": "A-1", "model_name": "m", "language": "en", "category": "Correct"},
-        {"question_id": "A-1", "model_name": "m", "language": "en", "category": "Correct"},
+        {
+            "question_id": "A-1",
+            "model_name": "m",
+            "language": "en",
+            "category": "Correct",
+        },
+        {
+            "question_id": "A-1",
+            "model_name": "m",
+            "language": "en",
+            "category": "Correct",
+        },
         {"question_id": "A-1", "model_name": "m", "language": "de", "category": "IDK"},
-        {"question_id": "A-1", "model_name": "m", "language": "de", "category": "Correct"},
+        {
+            "question_id": "A-1",
+            "model_name": "m",
+            "language": "de",
+            "category": "Correct",
+        },
     ]
     result = compute_reliability(rows, group_by=("model_name", "language"))
     assert result[("m", "en")].agreement_rate == 1.0

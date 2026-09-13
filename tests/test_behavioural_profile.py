@@ -15,8 +15,18 @@ def test_behavioural_profile_groups_by_language():
 
 def test_overlay_profile_excludes_not_applicable_rows():
     rows = [
-        {"question_id": "1", "category": "Correct", "language": "en", "jurisdiction_adaptation": "Correct-for-Jurisdiction"},
-        {"question_id": "2", "category": "Correct", "language": "en", "jurisdiction_adaptation": None},
+        {
+            "question_id": "1",
+            "category": "Correct",
+            "language": "en",
+            "jurisdiction_adaptation": "Correct-for-Jurisdiction",
+        },
+        {
+            "question_id": "2",
+            "category": "Correct",
+            "language": "en",
+            "jurisdiction_adaptation": None,
+        },
     ]
     profile = overlay_profile(rows, "jurisdiction_adaptation", group_by=("language",))
     assert profile[("en",)]["Correct-for-Jurisdiction"] == 1

@@ -7,7 +7,9 @@ from scripts.robust_run import build_lm_eval_args, ensure_resilience_args
 
 
 def test_ensure_resilience_args_injects_defaults_when_absent():
-    result = ensure_resilience_args("base_url=http://x,model=llama3.2:1b,num_concurrent=1")
+    result = ensure_resilience_args(
+        "base_url=http://x,model=llama3.2:1b,num_concurrent=1"
+    )
     assert "timeout=120" in result
     assert "max_retries=2" in result
 

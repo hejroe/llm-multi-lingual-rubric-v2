@@ -32,7 +32,9 @@ def compute_reliability(
         key = tuple(row.get(field) for field in group_by) + (row["question_id"],)
         by_item[key].append(row["category"])
 
-    totals: dict[tuple, list[int]] = defaultdict(lambda: [0, 0])  # [n_items, n_fully_agreeing]
+    totals: dict[tuple, list[int]] = defaultdict(
+        lambda: [0, 0]
+    )  # [n_items, n_fully_agreeing]
     for key, categories in by_item.items():
         condition_key = key[:-1]
         totals[condition_key][0] += 1

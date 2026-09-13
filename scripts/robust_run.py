@@ -33,7 +33,8 @@ directly):
 
     python scripts/robust_run.py \
       --model local-chat-completions \
-      --model_args base_url=http://host.docker.internal:11434/v1/chat/completions,model=llama3.2:1b,num_concurrent=1 \
+      --model_args base_url=http://host.docker.internal:11434/v1/chat/completions,\
+model=llama3.2:1b,num_concurrent=1 \
       --apply_chat_template \
       --include_path /configs/lm_eval_tasks \
       --tasks corpus_b_en,corpus_c_en \
@@ -69,18 +70,24 @@ def ensure_resilience_args(model_args: str) -> str:
 
 def build_lm_eval_args(args: argparse.Namespace) -> list[str]:
     lm_eval_args = [
-        "--model", args.model,
-        "--model_args", ensure_resilience_args(args.model_args),
-        "--tasks", args.tasks,
-        "--include_path", args.include_path,
-        "--output_path", args.output_path,
+        "--model",
+        args.model,
+        "--model_args",
+        ensure_resilience_args(args.model_args),
+        "--tasks",
+        args.tasks,
+        "--include_path",
+        args.include_path,
+        "--output_path",
+        args.output_path,
         "--log_samples",
         # Plain string join, not pathlib: this script only ever runs
         # inside the (Linux) eval container, and args.output_path is
         # always a POSIX path there (e.g. /results/...) regardless of
         # what platform a caller's own Python interpreter happens to be —
         # pathlib.Path would use the *interpreter's* OS separator instead.
-        "--use_cache", args.output_path.rstrip("/") + "/.cache",
+        "--use_cache",
+        args.output_path.rstrip("/") + "/.cache",
     ]
     if args.apply_chat_template:
         lm_eval_args.append("--apply_chat_template")
@@ -95,12 +102,19 @@ def run_with_recovery(lm_eval_args: list[str], run_retries: int) -> int:
     retry, not redundantly re-queried."""
     last_returncode = 1
     for attempt in range(1, run_retries + 1):
-        print(f"[robust_run] attempt {attempt}/{run_retries}: lm_eval {' '.join(lm_eval_args)}", file=sys.stderr)
+        print(
+            f"[robust_run] attempt {attempt}/{run_retries}: "
+            f"lm_eval {' '.join(lm_eval_args)}",
+            file=sys.stderr,
+        )
         result = subprocess.run(["lm_eval", *lm_eval_args])
         last_returncode = result.returncode
         if last_returncode == 0:
             return 0
-        print(f"[robust_run] attempt {attempt} exited with code {last_returncode}", file=sys.stderr)
+        print(
+            f"[robust_run] attempt {attempt} exited with code {last_returncode}",
+            file=sys.stderr,
+        )
     print(
         f"[robust_run] WARNING: did not complete cleanly after {run_retries} attempts. "
         "Reconciling against each task's expected item set now.",
@@ -143,7 +157,9 @@ def _load_task_dataset(task_yaml_path: Path, limit: float | None):
 
     cfg = load_yaml(task_yaml_path)
     dataset = load_dataset(
-        cfg["dataset_path"], data_files=cfg["dataset_kwargs"]["data_files"], split=cfg["test_split"],
+        cfg["dataset_path"],
+        data_files=cfg["dataset_kwargs"]["data_files"],
+        split=cfg["test_split"],
     )
     if cfg.get("process_docs"):
         dataset = cfg["process_docs"](dataset)
@@ -152,7 +168,9 @@ def _load_task_dataset(task_yaml_path: Path, limit: float | None):
     return dataset
 
 
-def reconcile_task(task_name: str, include_path: Path, model_output_dir: Path, limit: float | None) -> int:
+def reconcile_task(
+    task_name: str, include_path: Path, model_output_dir: Path, limit: float | None
+) -> int:
     """Compare a task's actual samples_*.jsonl against its full expected
     doc set; write any missing question_ids as empty-response stub rows
     to a separate *.missing.jsonl (scoring/rubric.py already tags an empty
@@ -162,11 +180,18 @@ def reconcile_task(task_name: str, include_path: Path, model_output_dir: Path, l
     this needs to handle correctly)."""
     task_yaml_candidates = list(include_path.glob(f"*/{task_name}.yaml"))
     if not task_yaml_candidates:
-        print(f"[robust_run] reconcile: no YAML found for task '{task_name}', skipping", file=sys.stderr)
+        print(
+            f"[robust_run] reconcile: no YAML found for task '{task_name}', skipping",
+            file=sys.stderr,
+        )
         return 0
     task_yaml_path = task_yaml_candidates[0]
 
-    sample_files = sorted(model_output_dir.glob(f"samples_{task_name}_*.jsonl")) if model_output_dir.is_dir() else []
+    sample_files = (
+        sorted(model_output_dir.glob(f"samples_{task_name}_*.jsonl"))
+        if model_output_dir.is_dir()
+        else []
+    )
     actual_ids: set[str] = set()
     if sample_files:
         samples_path = sample_files[-1]
@@ -176,7 +201,11 @@ def reconcile_task(task_name: str, include_path: Path, model_output_dir: Path, l
                 if line:
                     actual_ids.add(json.loads(line)["doc"]["question_id"])
     else:
-        print(f"[robust_run] reconcile: no samples file at all for '{task_name}' — every item is missing", file=sys.stderr)
+        print(
+            f"[robust_run] reconcile: no samples file at all for "
+            f"'{task_name}' — every item is missing",
+            file=sys.stderr,
+        )
         model_output_dir.mkdir(parents=True, exist_ok=True)
         samples_path = model_output_dir / f"samples_{task_name}_norun.jsonl"
 
@@ -189,14 +218,29 @@ def reconcile_task(task_name: str, include_path: Path, model_output_dir: Path, l
     missing_path = samples_path.parent / (samples_path.stem + ".missing.jsonl")
     with open(missing_path, "w", encoding="utf-8") as f:
         for qid in sorted(missing_ids):
-            f.write(json.dumps({"doc": docs_by_id[qid], "resps": [[]], "filtered_resps": ["[no_response]"]}) + "\n")
+            f.write(
+                json.dumps(
+                    {
+                        "doc": docs_by_id[qid],
+                        "resps": [[]],
+                        "filtered_resps": ["[no_response]"],
+                    }
+                )
+                + "\n"
+            )
 
-    print(f"[robust_run] reconcile: '{task_name}': {len(missing_ids)} item(s) never got a response -> {missing_path}", file=sys.stderr)
+    print(
+        f"[robust_run] reconcile: '{task_name}': {len(missing_ids)} item(s) "
+        f"never got a response -> {missing_path}",
+        file=sys.stderr,
+    )
     return len(missing_ids)
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument("--model", default="local-chat-completions")
     parser.add_argument("--model_args", required=True)
     parser.add_argument("--tasks", required=True, help="comma-separated task names")
@@ -204,7 +248,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--output_path", required=True)
     parser.add_argument("--apply_chat_template", action="store_true")
     parser.add_argument("--limit", type=float, default=None)
-    parser.add_argument("--run-retries", type=int, default=3, help="whole-invocation retries on crash")
+    parser.add_argument(
+        "--run-retries", type=int, default=3, help="whole-invocation retries on crash"
+    )
     args = parser.parse_args(argv)
 
     lm_eval_args = build_lm_eval_args(args)
@@ -219,11 +265,24 @@ def main(argv: list[str] | None = None) -> int:
 
     if returncode != 0:
         if total_missing == 0:
-            print("[robust_run] run did not exit cleanly, but reconciliation found no missing items — treating as recovered.", file=sys.stderr)
+            print(
+                "[robust_run] run did not exit cleanly, but reconciliation "
+                "found no missing items — treating as recovered.",
+                file=sys.stderr,
+            )
         else:
-            print(f"[robust_run] run did not complete cleanly; {total_missing} item(s) reconciled as Infrastructure-Failure.", file=sys.stderr)
+            print(
+                f"[robust_run] run did not complete cleanly; "
+                f"{total_missing} item(s) reconciled as "
+                "Infrastructure-Failure.",
+                file=sys.stderr,
+            )
     elif total_missing:
-        print(f"[robust_run] {total_missing} item(s) total reconciled as Infrastructure-Failure across all tasks.", file=sys.stderr)
+        print(
+            f"[robust_run] {total_missing} item(s) total reconciled as "
+            "Infrastructure-Failure across all tasks.",
+            file=sys.stderr,
+        )
     return 0
 
 

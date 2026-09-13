@@ -45,7 +45,9 @@ class PairedPointResult:
     mcnemar: McNemarResult
 
 
-def rq1_language_gap(scored_rows: list[dict], other_language_rows: list[dict]) -> PairedPointResult:
+def rq1_language_gap(
+    scored_rows: list[dict], other_language_rows: list[dict]
+) -> PairedPointResult:
     """RQ1 (10.3): Correct-category rate, same items across a language
     pair. `scored_rows` is the primary-language (baseline) condition;
     `other_language_rows` is the comparison language, paired via
@@ -115,7 +117,9 @@ class VarietyTripletResult:
     n_items: int
     correct_rates: dict[str, float]  # "us" | "uk" | "au" -> rate
     cochrans_q: CochranQResult
-    pairwise_mcnemar: dict[str, McNemarResult] | None  # only computed if Q is significant
+    pairwise_mcnemar: (
+        dict[str, McNemarResult] | None
+    )  # only computed if Q is significant
     pairwise_significant: dict[str, bool] | None  # Holm-Bonferroni-corrected
 
 
@@ -132,13 +136,17 @@ def rq7_variety_triplet(
     au_by_variant = {r["language_variant_of"]: r for r in au_rows}
 
     matrix = []
-    common_ids = [qid for qid in us_by_id if qid in uk_by_variant and qid in au_by_variant]
+    common_ids = [
+        qid for qid in us_by_id if qid in uk_by_variant and qid in au_by_variant
+    ]
     for qid in common_ids:
-        matrix.append([
-            int(_is_correct(us_by_id[qid])),
-            int(_is_correct(uk_by_variant[qid])),
-            int(_is_correct(au_by_variant[qid])),
-        ])
+        matrix.append(
+            [
+                int(_is_correct(us_by_id[qid])),
+                int(_is_correct(uk_by_variant[qid])),
+                int(_is_correct(au_by_variant[qid])),
+            ]
+        )
 
     n_items = len(matrix)
     correct_rates = {
@@ -156,13 +164,13 @@ def rq7_variety_triplet(
         pair_names = ["us_vs_uk", "us_vs_au", "uk_vs_au"]
         pair_indices = [(0, 1), (0, 2), (1, 2)]
         pairwise_mcnemar = {}
-        for name, (i, j) in zip(pair_names, pair_indices):
+        for name, (i, j) in zip(pair_names, pair_indices, strict=True):
             b = sum(1 for row in matrix if row[i] == 1 and row[j] == 0)
             c = sum(1 for row in matrix if row[j] == 1 and row[i] == 0)
             pairwise_mcnemar[name] = mcnemar_exact(b, c)
         p_values = [pairwise_mcnemar[name].p_value for name in pair_names]
         rejections = holm_bonferroni(p_values, alpha=alpha)
-        pairwise_significant = dict(zip(pair_names, rejections))
+        pairwise_significant = dict(zip(pair_names, rejections, strict=True))
 
     return VarietyTripletResult(
         n_items=n_items,
@@ -181,7 +189,9 @@ class CurrencyDescriptiveResult:
     current_and_correct: ClopperPearsonInterval
 
 
-def rq3_currency_descriptive(set_c_rows: list[dict], alpha: float = 0.05) -> CurrencyDescriptiveResult:
+def rq3_currency_descriptive(
+    set_c_rows: list[dict], alpha: float = 0.05
+) -> CurrencyDescriptiveResult:
     """RQ3 (10.3): descriptive proportions with exact (Clopper-Pearson)
     intervals over Set C's Currency-Awareness overlay — reported
     descriptively rather than as a formal test, since this pilot's Set C
@@ -223,7 +233,9 @@ def rq2_jurisdiction_default(
     specified sibling (paired via the shared base-fact id derived the same
     way `scoring.io._base_fact_id` does, since both variants share it).
     """
-    from scoring.io import _base_fact_id  # local import: analysis depends on scoring, not vice versa
+    from scoring.io import (
+        _base_fact_id,
+    )  # local import: analysis depends on scoring, not vice versa
 
     specified_by_base = {}
     for row in specified_rows:
@@ -241,8 +253,12 @@ def rq2_jurisdiction_default(
             continue
         specified_row = specified_by_base[base]
         n_pairs += 1
-        unspecified_is_wrong = row.get("jurisdiction_adaptation") == "Wrong-Jurisdiction-Default"
-        specified_is_wrong = specified_row.get("jurisdiction_adaptation") == "Wrong-Jurisdiction-Default"
+        unspecified_is_wrong = (
+            row.get("jurisdiction_adaptation") == "Wrong-Jurisdiction-Default"
+        )
+        specified_is_wrong = (
+            specified_row.get("jurisdiction_adaptation") == "Wrong-Jurisdiction-Default"
+        )
         unspecified_wrong += unspecified_is_wrong
         specified_wrong += specified_is_wrong
         if unspecified_is_wrong and not specified_is_wrong:

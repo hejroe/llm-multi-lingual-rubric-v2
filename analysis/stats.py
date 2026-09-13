@@ -17,7 +17,9 @@ from scipy import stats as scipy_stats
 
 @dataclass
 class McNemarResult:
-    statistic: int  # the smaller discordant-pair count, per the exact/sign-test formulation
+    statistic: (
+        int  # the smaller discordant-pair count, per the exact/sign-test formulation
+    )
     n_discordant: int
     p_value: float
 
@@ -44,7 +46,9 @@ class ClopperPearsonInterval:
     upper: float
 
 
-def clopper_pearson_interval(successes: int, n: int, alpha: float = 0.05) -> ClopperPearsonInterval:
+def clopper_pearson_interval(
+    successes: int, n: int, alpha: float = 0.05
+) -> ClopperPearsonInterval:
     """The exact binomial confidence interval STUDY_PROTOCOL.md 10.3
     specifies for RQ3's descriptive proportions (Current-and-Correct /
     Stale-Asserted-as-Current / Flagged-Uncertain-Appropriately rates),
@@ -54,9 +58,19 @@ def clopper_pearson_interval(successes: int, n: int, alpha: float = 0.05) -> Clo
     if n == 0:
         return ClopperPearsonInterval(point_estimate=0.0, lower=0.0, upper=1.0)
     point_estimate = successes / n
-    lower = 0.0 if successes == 0 else scipy_stats.beta.ppf(alpha / 2, successes, n - successes + 1)
-    upper = 1.0 if successes == n else scipy_stats.beta.ppf(1 - alpha / 2, successes + 1, n - successes)
-    return ClopperPearsonInterval(point_estimate=point_estimate, lower=lower, upper=upper)
+    lower = (
+        0.0
+        if successes == 0
+        else scipy_stats.beta.ppf(alpha / 2, successes, n - successes + 1)
+    )
+    upper = (
+        1.0
+        if successes == n
+        else scipy_stats.beta.ppf(1 - alpha / 2, successes + 1, n - successes)
+    )
+    return ClopperPearsonInterval(
+        point_estimate=point_estimate, lower=lower, upper=upper
+    )
 
 
 @dataclass
@@ -86,7 +100,9 @@ def cochrans_q(binary_matrix: list[list[int]]) -> CochranQResult:
     row_totals = [sum(row) for row in binary_matrix]
     grand_total = sum(row_totals)
 
-    numerator = (k - 1) * (k * sum(t * t for t in column_totals) - grand_total * grand_total)
+    numerator = (k - 1) * (
+        k * sum(t * t for t in column_totals) - grand_total * grand_total
+    )
     denominator = k * grand_total - sum(t * t for t in row_totals)
 
     if denominator == 0:

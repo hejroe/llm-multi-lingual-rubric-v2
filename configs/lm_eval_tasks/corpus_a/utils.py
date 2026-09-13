@@ -18,7 +18,9 @@ _CHOICE_LETTERS = "ABCDEFGHIJ"
 
 
 def filter_domain_language(dataset, domain, language):
-    return dataset.filter(lambda row: row["domain"] == domain and row["language"] == language)
+    return dataset.filter(
+        lambda row: row["domain"] == domain and row["language"] == language
+    )
 
 
 filter_knowledge_en = partial(filter_domain_language, domain="knowledge", language="en")
@@ -26,10 +28,18 @@ filter_knowledge_de = partial(filter_domain_language, domain="knowledge", langua
 filter_knowledge_sw = partial(filter_domain_language, domain="knowledge", language="sw")
 filter_knowledge_bn = partial(filter_domain_language, domain="knowledge", language="bn")
 
-filter_procedural_en = partial(filter_domain_language, domain="procedural", language="en")
-filter_procedural_de = partial(filter_domain_language, domain="procedural", language="de")
-filter_procedural_sw = partial(filter_domain_language, domain="procedural", language="sw")
-filter_procedural_bn = partial(filter_domain_language, domain="procedural", language="bn")
+filter_procedural_en = partial(
+    filter_domain_language, domain="procedural", language="en"
+)
+filter_procedural_de = partial(
+    filter_domain_language, domain="procedural", language="de"
+)
+filter_procedural_sw = partial(
+    filter_domain_language, domain="procedural", language="sw"
+)
+filter_procedural_bn = partial(
+    filter_domain_language, domain="procedural", language="bn"
+)
 
 
 def format_mcq(doc, question_label="Question", answer_label="Answer"):

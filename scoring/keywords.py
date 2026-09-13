@@ -35,7 +35,9 @@ def idk_marker_present(response_text: str, language: str) -> bool:
     """
     markers = _IDK_MARKERS.get(language, _IDK_MARKERS["en"])
     normalised_response = normalise_for_matching(response_text)
-    return any(normalise_for_matching(marker) in normalised_response for marker in markers)
+    return any(
+        normalise_for_matching(marker) in normalised_response for marker in markers
+    )
 
 
 # --- 8.4 step 4: IDK vs. a hedge-accompanied wrong answer -------------------
@@ -44,7 +46,28 @@ def idk_marker_present(response_text: str, language: str) -> bool:
 # removed (connectives, articles) — used only to judge whether *anything*
 # beyond boilerplate remains, not to extract or judge the remaining content.
 _FILLER_WORDS = {
-    "en": {"but", "though", "however", "maybe", "perhaps", "possibly", "something", "about", "with", "to", "do", "i", "think", "it", "the", "a", "an", "of", "is", "are"},
+    "en": {
+        "but",
+        "though",
+        "however",
+        "maybe",
+        "perhaps",
+        "possibly",
+        "something",
+        "about",
+        "with",
+        "to",
+        "do",
+        "i",
+        "think",
+        "it",
+        "the",
+        "a",
+        "an",
+        "of",
+        "is",
+        "are",
+    },
 }
 
 
@@ -122,7 +145,8 @@ def invented_detail_signal(
     proper_noun_runs = []
     if language in _PROPER_NOUN_HEURISTIC_LANGUAGES:
         proper_noun_runs = [
-            m for m in _PROPER_NOUN_RUN_RE.findall(stripped)
+            m
+            for m in _PROPER_NOUN_RUN_RE.findall(stripped)
             if normalise_for_matching(m) not in question_norm
         ]
     has_citation_hint = bool(_CITATION_HINT_RE.search(stripped))
@@ -130,7 +154,9 @@ def invented_detail_signal(
     # Clear-cut: a specific year or multi-word proper-noun run not in the
     # question, especially paired with a citation-style hint (the
     # "Camillo Golgi... 1898 paper" worked example).
-    if (years_found or proper_noun_runs) and (has_citation_hint or (years_found and proper_noun_runs)):
+    if (years_found or proper_noun_runs) and (
+        has_citation_hint or (years_found and proper_noun_runs)
+    ):
         return True, True
 
     if years_found or proper_noun_runs or has_citation_hint:

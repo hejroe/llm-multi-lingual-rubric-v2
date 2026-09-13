@@ -15,7 +15,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import sys
 from pathlib import Path
 
 from analysis.behavioural_profile import behavioural_profile
@@ -28,7 +27,9 @@ from analysis.rq_analysis import (
     rq7_variety_triplet,
 )
 
-PRIMARY_LANGUAGE = "de"  # STUDY_PROTOCOL.md 10.5, confirmed by the study owner 2026-09-08
+PRIMARY_LANGUAGE = (
+    "de"  # STUDY_PROTOCOL.md 10.5, confirmed by the study owner 2026-09-08
+)
 
 
 def _load_rows(paths: list[Path]) -> list[dict]:
@@ -48,7 +49,13 @@ def _by(rows: list[dict], **filters) -> list[dict]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--scored", required=True, nargs="+", type=Path, help="one or more scored JSONL files")
+    parser.add_argument(
+        "--scored",
+        required=True,
+        nargs="+",
+        type=Path,
+        help="one or more scored JSONL files",
+    )
     args = parser.parse_args(argv)
 
     rows = _load_rows(args.scored)
@@ -56,20 +63,29 @@ def main(argv: list[str] | None = None) -> int:
 
     print("=== Behavioural Response Profile (10.2), by language ===")
     profile_items = behavioural_profile(rows, group_by=("language",)).items()
-    for key, counter in sorted(profile_items, key=lambda kv: tuple(str(x) for x in kv[0])):
+    for key, counter in sorted(
+        profile_items, key=lambda kv: tuple(str(x) for x in kv[0])
+    ):
         print(f"  {key}: {dict(counter)}")
 
     print("\n=== Reliability (10.4), by model ===")
     reliability = compute_reliability(rows, group_by=("model_name",))
     if reliability:
         for key, result in reliability.items():
-            print(f"  {key}: {result.n_fully_agreeing}/{result.n_items} items fully agree ({result.agreement_rate:.1%})")
+            print(
+                f"  {key}: {result.n_fully_agreeing}/{result.n_items} items fully "
+                f"agree ({result.agreement_rate:.1%})"
+            )
     else:
         print("  skipped: no rows to group")
 
-    print(f"\n=== RQ1: Correct-rate, {PRIMARY_LANGUAGE} vs each other language (10.3) ===")
+    print(
+        f"\n=== RQ1: Correct-rate, {PRIMARY_LANGUAGE} vs each other language (10.3) ==="
+    )
     en_rows = _by(rows, family="A", language="en")
-    other_languages = sorted({r["language"] for r in rows if r.get("family") == "A"} - {"en"})
+    other_languages = sorted(
+        {r["language"] for r in rows if r.get("family") == "A"} - {"en"}
+    )
     if not en_rows or not other_languages:
         print("  skipped: needs Set A rows in English plus at least one other language")
     else:
@@ -79,13 +95,19 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"  en vs {lang}: skipped (no paired items found)")
             else:
                 print(
-                    f"  en vs {lang}: n={result.n_pairs}, en={result.condition_a_rate:.1%}, "
-                    f"{lang}={result.condition_b_rate:.1%}, McNemar p={result.mcnemar.p_value:.4f}"
+                    f"  en vs {lang}: n={result.n_pairs}, "
+                    f"en={result.condition_a_rate:.1%}, "
+                    f"{lang}={result.condition_b_rate:.1%}, "
+                    f"McNemar p={result.mcnemar.p_value:.4f}"
                 )
 
     print("\n=== RQ2: Jurisdiction-Adaptation, unspecified vs specified (10.3) ===")
-    unspecified_rows = [r for r in rows if r.get("family") == "B" and not r.get("jurisdiction")]
-    specified_rows = [r for r in rows if r.get("family") == "B" and r.get("jurisdiction")]
+    unspecified_rows = [
+        r for r in rows if r.get("family") == "B" and not r.get("jurisdiction")
+    ]
+    specified_rows = [
+        r for r in rows if r.get("family") == "B" and r.get("jurisdiction")
+    ]
     if not unspecified_rows or not specified_rows:
         print("  skipped: needs both unspecified and jurisdiction-specified Set B rows")
     else:
@@ -93,9 +115,13 @@ def main(argv: list[str] | None = None) -> int:
         if result.n_pairs == 0:
             print("  skipped: no paired items found")
         else:
+            unspecified_rate = result.unspecified_wrong_default_rate
+            specified_rate = result.specified_wrong_default_rate
             print(
-                f"  n={result.n_pairs}, unspecified wrong-default rate={result.unspecified_wrong_default_rate:.1%}, "
-                f"specified wrong-default rate={result.specified_wrong_default_rate:.1%}, McNemar p={result.mcnemar.p_value:.4f}"
+                f"  n={result.n_pairs}, "
+                f"unspecified wrong-default rate={unspecified_rate:.1%}, "
+                f"specified wrong-default rate={specified_rate:.1%}, "
+                f"McNemar p={result.mcnemar.p_value:.4f}"
             )
 
     print("\n=== RQ3: Currency-Awareness, descriptive (10.3) ===")
@@ -109,7 +135,10 @@ def main(argv: list[str] | None = None) -> int:
             ("Stale-Asserted-as-Current", result.stale_asserted_as_current),
             ("Flagged-Uncertain-Appropriately", result.flagged_uncertain_appropriately),
         ]:
-            print(f"  {label}: {interval.point_estimate:.1%} (95% CI {interval.lower:.1%}-{interval.upper:.1%})")
+            print(
+                f"  {label}: {interval.point_estimate:.1%} "
+                f"(95% CI {interval.lower:.1%}-{interval.upper:.1%})"
+            )
 
     print("\n=== RQ6: Contamination check, Set A vs Set E (10.3) ===")
     set_a_en_rows = _by(rows, family="A", language="en")
@@ -121,10 +150,15 @@ def main(argv: list[str] | None = None) -> int:
         if result.n_pairs == 0:
             print("  skipped: no paired items found")
         else:
-            flag = "CONTAMINATION-INDICATIVE" if result.contamination_indicative else "not indicative"
+            flag = (
+                "CONTAMINATION-INDICATIVE"
+                if result.contamination_indicative
+                else "not indicative"
+            )
             print(
                 f"  n={result.n_pairs}, original={result.original_correct_rate:.1%}, "
-                f"perturbed={result.perturbed_correct_rate:.1%}, drop={result.percentage_point_drop:.1f}pp ({flag}), "
+                f"perturbed={result.perturbed_correct_rate:.1%}, "
+                f"drop={result.percentage_point_drop:.1f}pp ({flag}), "
                 f"McNemar p={result.mcnemar.p_value:.4f}"
             )
 
@@ -140,11 +174,21 @@ def main(argv: list[str] | None = None) -> int:
             print("  skipped: no paired items found")
         else:
             print(f"  n={result.n_items}, rates={result.correct_rates}")
-            print(f"  Cochran's Q={result.cochrans_q.statistic:.3f}, df={result.cochrans_q.df}, p={result.cochrans_q.p_value:.4f}")
+            print(
+                f"  Cochran's Q={result.cochrans_q.statistic:.3f}, "
+                f"df={result.cochrans_q.df}, p={result.cochrans_q.p_value:.4f}"
+            )
             if result.pairwise_mcnemar:
                 for pair, mcnemar_result in result.pairwise_mcnemar.items():
-                    sig = "significant" if result.pairwise_significant[pair] else "not significant"
-                    print(f"    {pair}: p={mcnemar_result.p_value:.4f} ({sig}, Holm-Bonferroni-corrected)")
+                    sig = (
+                        "significant"
+                        if result.pairwise_significant[pair]
+                        else "not significant"
+                    )
+                    print(
+                        f"    {pair}: p={mcnemar_result.p_value:.4f} "
+                        f"({sig}, Holm-Bonferroni-corrected)"
+                    )
             else:
                 print("  (Q not significant — pairwise comparisons not run, per 10.3)")
 

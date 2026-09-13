@@ -11,14 +11,22 @@ from scripts.replicate_run import main
 
 def test_replicates_into_numbered_subdirectories():
     with patch("scripts.replicate_run.robust_run_main", return_value=0) as mock_main:
-        exit_code = main([
-            "--replications", "3",
-            "--output_path", "/results/stability_test",
-            "--model", "local-chat-completions",
-            "--model_args", "model=x",
-            "--tasks", "corpus_b_en",
-            "--include_path", "/configs/lm_eval_tasks",
-        ])
+        exit_code = main(
+            [
+                "--replications",
+                "3",
+                "--output_path",
+                "/results/stability_test",
+                "--model",
+                "local-chat-completions",
+                "--model_args",
+                "model=x",
+                "--tasks",
+                "corpus_b_en",
+                "--include_path",
+                "/configs/lm_eval_tasks",
+            ]
+        )
 
     assert exit_code == 0
     assert mock_main.call_count == 3
@@ -35,15 +43,23 @@ def test_replicates_into_numbered_subdirectories():
 
 def test_forwards_other_flags_unchanged():
     with patch("scripts.replicate_run.robust_run_main", return_value=0) as mock_main:
-        main([
-            "--replications", "1",
-            "--output_path", "/results/x",
-            "--model_args", "model=x,timeout=60",
-            "--limit", "5",
-        ])
+        main(
+            [
+                "--replications",
+                "1",
+                "--output_path",
+                "/results/x",
+                "--model_args",
+                "model=x,timeout=60",
+                "--limit",
+                "5",
+            ]
+        )
     forwarded_args = mock_main.call_args_list[0].args[0]
     assert "--model_args" in forwarded_args
-    assert forwarded_args[forwarded_args.index("--model_args") + 1] == "model=x,timeout=60"
+    assert (
+        forwarded_args[forwarded_args.index("--model_args") + 1] == "model=x,timeout=60"
+    )
     assert "--limit" in forwarded_args
     assert forwarded_args[forwarded_args.index("--limit") + 1] == "5"
 
@@ -52,7 +68,10 @@ def test_supports_large_replication_counts_with_padded_names():
     with patch("scripts.replicate_run.robust_run_main", return_value=0) as mock_main:
         main(["--replications", "100", "--output_path", "/results/x"])
     forwarded_args = mock_main.call_args_list[-1].args[0]
-    assert forwarded_args[forwarded_args.index("--output_path") + 1] == "/results/x/replicate_099"
+    assert (
+        forwarded_args[forwarded_args.index("--output_path") + 1]
+        == "/results/x/replicate_099"
+    )
 
 
 def test_nonzero_when_any_replicate_fails():

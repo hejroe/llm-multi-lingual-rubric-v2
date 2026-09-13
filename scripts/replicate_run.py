@@ -25,7 +25,8 @@ running it for real for the first time):
     python -m scripts.replicate_run \
       --replications 100 \
       --model local-chat-completions \
-      --model_args base_url=http://host.docker.internal:11434/v1/chat/completions,model=llama3.2:1b,num_concurrent=1 \
+      --model_args base_url=http://host.docker.internal:11434/v1/chat/completions,\
+model=llama3.2:1b,num_concurrent=1 \
       --apply_chat_template \
       --include_path /configs/lm_eval_tasks \
       --tasks corpus_b_en \
@@ -51,9 +52,13 @@ from scripts.robust_run import main as robust_run_main
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument(
-        "--replications", type=int, default=3,
+        "--replications",
+        type=int,
+        default=3,
         help="Protocol 9.3's starting point is 3; any N >= 1 is supported",
     )
     parser.add_argument("--output_path", required=True)
@@ -69,15 +74,23 @@ def main(argv: list[str] | None = None) -> int:
     exit_codes = []
     for i in range(known.replications):
         replicate_output = f"{known.output_path.rstrip('/')}/replicate_{i:0{width}d}"
-        print(f"[replicate_run] replicate {i + 1}/{known.replications} -> {replicate_output}", file=sys.stderr)
-        exit_codes.append(robust_run_main([*passthrough, "--output_path", replicate_output]))
+        print(
+            f"[replicate_run] replicate {i + 1}/{known.replications} -> "
+            f"{replicate_output}",
+            file=sys.stderr,
+        )
+        exit_codes.append(
+            robust_run_main([*passthrough, "--output_path", replicate_output])
+        )
 
     failed = [i for i, code in enumerate(exit_codes) if code != 0]
     if failed:
         print(
-            f"[replicate_run] {len(failed)}/{known.replications} replicate(s) reported a non-zero exit "
-            f"(0-indexed): {failed} — each replicate's own reconciliation (robust_run.py) still records "
-            "what did or didn't get a response; check each replicate_*/'s *.missing.jsonl.",
+            f"[replicate_run] {len(failed)}/{known.replications} "
+            "replicate(s) reported a non-zero exit (0-indexed): "
+            f"{failed} — each replicate's own reconciliation "
+            "(robust_run.py) still records what did or didn't get a "
+            "response; check each replicate_*/'s *.missing.jsonl.",
             file=sys.stderr,
         )
     return 0 if not failed else 1

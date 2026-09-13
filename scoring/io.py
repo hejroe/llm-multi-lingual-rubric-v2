@@ -45,11 +45,17 @@ class RunProvenance:
     backend: str
     run_timestamp: str  # ISO 8601
     rubric_version: str = RUBRIC_VERSION
-    model_digest: str | None = None  # not recoverable from harness output; supply from `ollama list`
+    model_digest: str | None = (
+        None  # not recoverable from harness output; supply from `ollama list`
+    )
     param_overrides: str | None = None
     tool_mode: str | None = None  # "simulated" | "live", Set D only (9.5)
-    reasoning_mode: str | None = None  # "enabled" | "disabled", Qwen3 only (ADR 0010, 9.3)
-    replicate_index: int | None = None  # which of N replications (9.3, scripts/replicate_run.py) this run is
+    reasoning_mode: str | None = (
+        None  # "enabled" | "disabled", Qwen3 only (ADR 0010, 9.3)
+    )
+    replicate_index: int | None = (
+        None  # which of N replications (9.3, scripts/replicate_run.py) this run is
+    )
 
 
 def read_samples(jsonl_path: Path) -> list[dict]:
@@ -107,7 +113,9 @@ def infer_backend(base_url: str) -> str:
     return "unknown"
 
 
-def fetch_ollama_digest(model_name: str, ollama_url: str = "http://localhost:11434") -> str | None:
+def fetch_ollama_digest(
+    model_name: str, ollama_url: str = "http://localhost:11434"
+) -> str | None:
     """Query Ollama's own `/api/tags` for `model_name`'s digest directly —
     Ollama runs natively on Windows in this project's setup and, once
     bound to all interfaces (docker-compose.yml's header comment), is
@@ -153,7 +161,11 @@ def compute_gguf_digest(gguf_path: Path) -> str | None:
 
 
 def auto_detect_model_digest(
-    model_name: str, backend: str, *, ollama_url: str = "http://localhost:11434", gguf_path: Path | None = None
+    model_name: str,
+    backend: str,
+    *,
+    ollama_url: str = "http://localhost:11434",
+    gguf_path: Path | None = None,
 ) -> str | None:
     """Dispatch to whichever automatic digest lookup applies for `backend`
     — the single entry point `scoring.cli` calls so a digest is filled in
@@ -187,7 +199,9 @@ def provenance_from_aggregated_results(
         aggregated = json.load(f)
     model_args = aggregated["config"].get("model_args", {})
     base_url = model_args.get("base_url", "")
-    run_timestamp = datetime.fromtimestamp(aggregated["date"], tz=timezone.utc).isoformat()
+    run_timestamp = datetime.fromtimestamp(
+        aggregated["date"], tz=timezone.utc
+    ).isoformat()
     return RunProvenance(
         corpus_version=corpus_version,
         model_name=model_args.get("model", aggregated.get("model_name", "unknown")),
@@ -205,8 +219,15 @@ def provenance_from_aggregated_results(
 # (`language_variant_of`) and to group by condition, without a separate
 # join back to the raw corpus CSV or harness samples file.
 _ITEM_CONTEXT_FIELDS = (
-    "family", "domain", "language", "variety", "jurisdiction",
-    "effective_from", "effective_until", "language_variant_of", "tool_required",
+    "family",
+    "domain",
+    "language",
+    "variety",
+    "jurisdiction",
+    "effective_from",
+    "effective_until",
+    "language_variant_of",
+    "tool_required",
 )
 
 
@@ -217,13 +238,22 @@ class ProvenancedScoredResponse:
     item: dict
 
     def to_flat_dict(self) -> dict:
-        row = {"question_id": self.scored.question_id, "category": self.scored.category.value}
-        row["confidence_tier"] = self.scored.confidence_tier.value if self.scored.confidence_tier else None
+        row = {
+            "question_id": self.scored.question_id,
+            "category": self.scored.category.value,
+        }
+        row["confidence_tier"] = (
+            self.scored.confidence_tier.value if self.scored.confidence_tier else None
+        )
         row["jurisdiction_adaptation"] = (
-            self.scored.jurisdiction_adaptation.value if self.scored.jurisdiction_adaptation else None
+            self.scored.jurisdiction_adaptation.value
+            if self.scored.jurisdiction_adaptation
+            else None
         )
         row["currency_awareness"] = (
-            self.scored.currency_awareness.value if self.scored.currency_awareness else None
+            self.scored.currency_awareness.value
+            if self.scored.currency_awareness
+            else None
         )
         row["tool_invocation"] = (
             self.scored.tool_invocation.value if self.scored.tool_invocation else None
@@ -236,7 +266,9 @@ class ProvenancedScoredResponse:
         return row
 
 
-def score_jsonl_file(jsonl_path: Path, provenance: RunProvenance) -> list[ProvenancedScoredResponse]:
+def score_jsonl_file(
+    jsonl_path: Path, provenance: RunProvenance
+) -> list[ProvenancedScoredResponse]:
     """Score every sample in one task's `--log_samples` JSONL file.
 
     One file = one task = one (family, language[, domain/variety]) cell
@@ -265,13 +297,18 @@ def score_jsonl_file(jsonl_path: Path, provenance: RunProvenance) -> list[Proven
             response_text=response_text,
             sibling_jurisdiction_items=siblings if family == "B" else None,
             sibling_version_items=siblings if family == "C" else None,
-            tool_call_invoked=None,  # not recoverable from generate_until output — see module docstring
+            # not recoverable from generate_until output — see module docstring
+            tool_call_invoked=None,
         )
-        results.append(ProvenancedScoredResponse(scored=scored, provenance=provenance, item=doc))
+        results.append(
+            ProvenancedScoredResponse(scored=scored, provenance=provenance, item=doc)
+        )
     return results
 
 
-def write_scored_jsonl(results: list[ProvenancedScoredResponse], out_path: Path) -> None:
+def write_scored_jsonl(
+    results: list[ProvenancedScoredResponse], out_path: Path
+) -> None:
     out_path.parent.mkdir(parents=True, exist_ok=True)
     with open(out_path, "w", encoding="utf-8") as f:
         for result in results:

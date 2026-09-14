@@ -1,10 +1,41 @@
-from scoring.score_pilot_run import _reasoning_mode_from_slug, find_runs
+from scoring.score_pilot_run import (
+    _correct_qwen3_provenance,
+    _reasoning_mode_from_slug,
+    find_runs,
+)
 
 
 def test_reasoning_mode_from_slug():
     assert _reasoning_mode_from_slug("qwen3_4b_reasoning") == "enabled"
     assert _reasoning_mode_from_slug("qwen3_4b_nonreasoning") == "disabled"
     assert _reasoning_mode_from_slug("llama3.2_1b") is None
+
+
+def test_correct_qwen3_provenance_derives_size_and_backend_from_slug():
+    # Regression (2026-09-14): real pilot data showed model_name="llamacpp"
+    # (the server, not the model) for every Qwen3 run, and backend
+    # "unknown" (infer_backend's hardcoded 8080/8081 check didn't match a
+    # real run's port 8090) -- both wrong in the same way, for the same
+    # underlying reason: --model_args used a generic "llamacpp" placeholder.
+    assert _correct_qwen3_provenance("qwen3_1.7b_nonreasoning") == (
+        "qwen3:1.7b",
+        "llamacpp",
+    )
+    assert _correct_qwen3_provenance("qwen3_1.7b_reasoning") == (
+        "qwen3:1.7b",
+        "llamacpp",
+    )
+    assert _correct_qwen3_provenance("qwen3_4b_nonreasoning") == (
+        "qwen3:4b",
+        "llamacpp",
+    )
+
+
+def test_correct_qwen3_provenance_none_for_non_qwen3_slugs():
+    # Every other model's aggregated results_*.json already carries its
+    # real model_name/backend correctly -- nothing to override.
+    assert _correct_qwen3_provenance("llama3.2_1b") is None
+    assert _correct_qwen3_provenance("phi4-mini") is None
 
 
 def test_find_runs_walks_slug_replicate_model_structure(tmp_path):

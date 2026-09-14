@@ -4,11 +4,24 @@
 Usage:
     python -m analysis.cli --scored results/scored/*.jsonl
 
-Best-effort: an RQ whose required paired data isn't present in the given
-files (e.g. RQ1 needs both a baseline language and at least one comparison
-language actually scored) is reported as skipped, not silently omitted or
-crashed on — this pilot's data grows incrementally, and which RQs are
-answerable depends on which tasks have actually been run and scored so far.
+Reports everything once per (model_name, reasoning_mode) group, not
+pooled across the whole file — found necessary 2026-09-14, once real
+multi-model pilot data existed for the first time: 10.2 establishes "for
+each model" as the standard reporting grain (the Behavioural Profile and
+Reliability code already honored this), but the RQ1/RQ2/RQ3/RQ6/RQ7
+functions were being called on the *entire* concatenated dataset, pooling
+every registered model's responses together as if they were one entity.
+`reasoning_mode` is part of the grouping key, not folded into
+`model_name`, because ADR 0010 treats Qwen3's non-reasoning and reasoning
+conditions as two conditions that must never be pooled — the same
+discipline extends naturally to grouping here.
+
+Best-effort: an RQ whose required paired data isn't present for a given
+model (e.g. RQ1 needs both a baseline language and at least one
+comparison language actually scored) is reported as skipped, not silently
+omitted or crashed on — this pilot's data grows incrementally, and which
+RQs are answerable depends on which tasks have actually been run and
+scored so far.
 """
 
 from __future__ import annotations
@@ -63,46 +76,43 @@ def _primary_domain(rows: list[dict], family: str) -> str | None:
     return max(counts.items(), key=lambda kv: (kv[1], kv[0]))[0]
 
 
-def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--scored",
-        required=True,
-        nargs="+",
-        type=Path,
-        help="one or more scored JSONL files",
-    )
-    args = parser.parse_args(argv)
+def _model_groups(rows: list[dict]) -> list[tuple[str, str | None]]:
+    """Distinct (model_name, reasoning_mode) pairs present, sorted for a
+    stable report order."""
+    groups = {
+        (r["model_name"], r.get("reasoning_mode")) for r in rows if r.get("model_name")
+    }
+    return sorted(groups, key=lambda g: (g[0], g[1] or ""))
 
-    rows = _load_rows(args.scored)
-    print(f"loaded {len(rows)} scored rows from {len(args.scored)} file(s)\n")
 
-    # Primary-confirmatory-set p-values (10.5), assembled as each RQ below
-    # actually produces one, then Holm-Bonferroni-corrected together at the
-    # end — only RQs whose primary comparison is actually available given
-    # the corpus scored so far are included, consistent with this module's
-    # existing "skip, don't fabricate" policy.
+def _report_for_model(rows: list[dict], label: str) -> None:
+    # Primary-confirmatory-set p-values (10.5) for *this model*: one test
+    # per RQ, Holm-Bonferroni-corrected together at the end of this
+    # model's own section — kept separate per model rather than pooled
+    # into one giant cross-model family, matching 10.2's per-model
+    # reporting grain (each model's evaluation is its own coherent
+    # confirmatory analysis, not one shared test of "the model set").
     primary_p_values: dict[str, float] = {}
 
-    print("=== Behavioural Response Profile (10.2), by language ===")
+    print(f"\n--- Reliability (10.4): {label} ---")
+    reliability = compute_reliability(rows, group_by=())
+    if reliability:
+        result = reliability[()]
+        print(
+            f"  {result.n_fully_agreeing}/{result.n_items} items fully "
+            f"agree ({result.agreement_rate:.1%})"
+        )
+    else:
+        print("  skipped: no rows to group")
+
+    print(f"\n--- Behavioural Response Profile (10.2), by language: {label} ---")
     profile_items = behavioural_profile(rows, group_by=("language",)).items()
     for key, counter in sorted(
         profile_items, key=lambda kv: tuple(str(x) for x in kv[0])
     ):
         print(f"  {key}: {dict(counter)}")
 
-    print("\n=== Reliability (10.4), by model ===")
-    reliability = compute_reliability(rows, group_by=("model_name",))
-    if reliability:
-        for key, result in reliability.items():
-            print(
-                f"  {key}: {result.n_fully_agreeing}/{result.n_items} items fully "
-                f"agree ({result.agreement_rate:.1%})"
-            )
-    else:
-        print("  skipped: no rows to group")
-
-    print("\n=== RQ1: Correct-rate, per language pair, per domain (10.3) ===")
+    print(f"\n--- RQ1: Correct-rate, per language pair, per domain: {label} ---")
     other_languages = sorted(
         {r["language"] for r in rows if r.get("family") == "A"} - {"en"}
     )
@@ -135,7 +145,7 @@ def main(argv: list[str] | None = None) -> int:
                 if is_primary:
                     primary_p_values["RQ1"] = result.mcnemar.p_value
 
-    print("\n=== RQ2: Jurisdiction-Adaptation, unspecified vs specified (10.3) ===")
+    print(f"\n--- RQ2: Jurisdiction-Adaptation, unspecified vs specified: {label} ---")
     b_languages = sorted({r["language"] for r in rows if r.get("family") == "B"})
     if not b_languages:
         print("  skipped: no Set B rows")
@@ -178,23 +188,23 @@ def main(argv: list[str] | None = None) -> int:
             if is_primary:
                 primary_p_values["RQ2"] = result.mcnemar.p_value
 
-    print("\n=== RQ3: Currency-Awareness, descriptive (10.3) ===")
+    print(f"\n--- RQ3: Currency-Awareness, descriptive: {label} ---")
     set_c_rows = [r for r in rows if r.get("family") == "C"]
     if not set_c_rows:
         print("  skipped: no Set C rows")
     else:
         result = rq3_currency_descriptive(set_c_rows)
-        for label, interval in [
+        for rq3_label, interval in [
             ("Current-and-Correct", result.current_and_correct),
             ("Stale-Asserted-as-Current", result.stale_asserted_as_current),
             ("Flagged-Uncertain-Appropriately", result.flagged_uncertain_appropriately),
         ]:
             print(
-                f"  {label}: {interval.point_estimate:.1%} "
+                f"  {rq3_label}: {interval.point_estimate:.1%} "
                 f"(95% CI {interval.lower:.1%}-{interval.upper:.1%})"
             )
 
-    print("\n=== RQ6: Contamination check, Set A vs Set E (10.3) ===")
+    print(f"\n--- RQ6: Contamination check, Set A vs Set E: {label} ---")
     e_languages = sorted({r["language"] for r in rows if r.get("family") == "E"})
     if not e_languages:
         print("  skipped: no Set E rows")
@@ -230,11 +240,12 @@ def main(argv: list[str] | None = None) -> int:
                 primary_p_values["RQ6"] = result.mcnemar.p_value
         if PRIMARY_LANGUAGE not in e_languages:
             print(
-                f"  note: no Set E rows in the primary language ({PRIMARY_LANGUAGE}) "
-                "yet — RQ6 has no primary-set entry for this run"
+                f"  note: no Set E rows in the primary language "
+                f"({PRIMARY_LANGUAGE}) yet — RQ6 has no primary-set entry "
+                "for this model"
             )
 
-    print("\n=== RQ7: US/UK/AU variety triplet (10.3) ===")
+    print(f"\n--- RQ7: US/UK/AU variety triplet: {label} ---")
     us_rows = _by(rows, family="A", language="en", domain="knowledge")
     uk_rows = _by(rows, family="F", variety="UK")
     au_rows = _by(rows, family="F", variety="AU")
@@ -266,28 +277,63 @@ def main(argv: list[str] | None = None) -> int:
                 print("  (Q not significant — pairwise comparisons not run, per 10.3)")
 
     print(
-        "\n=== Primary confirmatory set (10.5): "
-        "Holm-Bonferroni-corrected across RQs ==="
+        f"\n--- Primary confirmatory set (10.5), Holm-Bonferroni-corrected: {label} ---"
     )
     if not primary_p_values:
         print("  skipped: no RQ's primary comparison is available yet")
     else:
         correction = correct_primary_confirmatory_set(primary_p_values)
-        for label, raw_p, sig in zip(
+        for corr_label, raw_p, sig in zip(
             correction.labels,
             correction.raw_p_values,
             correction.corrected_significant,
             strict=True,
         ):
             verdict = "significant" if sig else "not significant"
-            print(f"  {label}: raw p={raw_p:.4f} -> {verdict} (corrected, alpha=0.05)")
+            print(
+                f"  {corr_label}: raw p={raw_p:.4f} -> {verdict} "
+                "(corrected, alpha=0.05)"
+            )
         missing = {"RQ1", "RQ2", "RQ6", "RQ7"} - set(primary_p_values)
         if missing:
             print(
                 f"  note: {', '.join(sorted(missing))} not yet part of this "
-                "correction — primary comparison unavailable given the "
-                "corpus scored so far"
+                "correction — primary comparison unavailable for this "
+                "model given the corpus scored so far"
             )
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--scored",
+        required=True,
+        nargs="+",
+        type=Path,
+        help="one or more scored JSONL files",
+    )
+    args = parser.parse_args(argv)
+
+    rows = _load_rows(args.scored)
+    print(f"loaded {len(rows)} scored rows from {len(args.scored)} file(s)")
+
+    groups = _model_groups(rows)
+    if not groups:
+        print("no model_name found in any row — nothing to report")
+        return 0
+
+    for model_name, reasoning_mode in groups:
+        label = (
+            model_name if reasoning_mode is None else f"{model_name} ({reasoning_mode})"
+        )
+        model_rows = [
+            r
+            for r in rows
+            if r.get("model_name") == model_name
+            and r.get("reasoning_mode") == reasoning_mode
+        ]
+        print(f"\n{'=' * 70}\n{label}\n{'=' * 70}")
+        _report_for_model(model_rows, label)
 
     return 0
 

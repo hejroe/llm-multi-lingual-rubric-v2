@@ -26,6 +26,7 @@ from scoring.io import (
 )
 
 _REPLICATE_RE = re.compile(r"^replicate_(\d+)$")
+_QWEN3_SLUG_RE = re.compile(r"^(qwen3_[\d.]+b)_(?:non)?reasoning$")
 
 
 def _reasoning_mode_from_slug(slug: str) -> str | None:
@@ -34,6 +35,28 @@ def _reasoning_mode_from_slug(slug: str) -> str | None:
     if slug.endswith("_nonreasoning"):
         return "disabled"
     return None
+
+
+def _correct_qwen3_provenance(slug: str) -> tuple[str, str] | None:
+    """Qwen3 runs are routed entirely through llama.cpp (ADR 0010,
+    Limitations 12.11) with a generic `model=llamacpp` placeholder in
+    `--model_args` -- the server's own name, not the model actually
+    served -- so the aggregated results_*.json's `model_name` field is
+    wrong for every Qwen3 run, and `infer_backend`'s URL-port heuristic is
+    fragile across machines (found 2026-09-14: a real run used port 8090,
+    matching neither of infer_backend's hardcoded 8080/8081 checks,
+    scoring `backend` as "unknown"). The directory slug is the one place
+    that correctly records which model actually ran; derive the
+    Ollama-tag-style identity from it (matching every other registered
+    model's naming, e.g. "llama3.2:1b") rather than trusting either
+    field. Returns None for non-Qwen3 slugs, where both fields are
+    already correct.
+    """
+    match = _QWEN3_SLUG_RE.match(slug)
+    if not match:
+        return None
+    size = match.group(1).split("_", 1)[1]  # "1.7b" / "4b"
+    return f"qwen3:{size}", "llamacpp"
 
 
 def find_runs(pilot_root: Path):
@@ -92,6 +115,10 @@ def main(argv: list[str] | None = None) -> int:
             reasoning_mode=reasoning_mode,
             replicate_index=replicate_index,
         )
+
+        corrected = _correct_qwen3_provenance(slug)
+        if corrected is not None:
+            provenance.model_name, provenance.backend = corrected
 
         if provenance.model_digest is None and not args.no_auto_digest:
             cache_key = (provenance.model_name, provenance.backend)

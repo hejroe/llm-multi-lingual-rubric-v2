@@ -1,5 +1,8 @@
+from pathlib import Path
+
 from scoring.score_pilot_run import (
     _correct_qwen3_provenance,
+    _duplicate_task_files,
     _reasoning_mode_from_slug,
     find_runs,
 )
@@ -77,3 +80,26 @@ def test_find_runs_skips_non_replicate_directories(tmp_path):
     (tmp_path / "llama3.2_1b" / "not_a_replicate_dir").mkdir(parents=True)
     runs = list(find_runs(tmp_path))
     assert runs == []
+
+
+def test_duplicate_task_files_detects_stale_plus_fresh_pair():
+    # Regression (2026-09-14): a real pilot run had exactly this shape --
+    # an old (pre-crash) attempt's samples file for a task sitting
+    # alongside a freshly copied-in one for the same task, both with
+    # different timestamps in the filename.
+    files = [
+        Path("samples_corpus_a_knowledge_en_2026-09-12T23-30-43.983931.jsonl"),
+        Path("samples_corpus_a_knowledge_en_2026-09-13T15-24-25.935606.jsonl"),
+        Path("samples_corpus_b_en_2026-09-13T15-24-25.935606.jsonl"),
+    ]
+    duplicates = _duplicate_task_files(files)
+    assert list(duplicates.keys()) == ["corpus_a_knowledge_en"]
+    assert len(duplicates["corpus_a_knowledge_en"]) == 2
+
+
+def test_duplicate_task_files_empty_when_one_file_per_task():
+    files = [
+        Path("samples_corpus_a_knowledge_en_2026-09-13T15-24-25.935606.jsonl"),
+        Path("samples_corpus_b_en_2026-09-13T15-24-25.935606.jsonl"),
+    ]
+    assert _duplicate_task_files(files) == {}

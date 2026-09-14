@@ -16,6 +16,7 @@ from __future__ import annotations
 import argparse
 import re
 import sys
+from collections import defaultdict
 from pathlib import Path
 
 from scoring.io import (
@@ -27,6 +28,24 @@ from scoring.io import (
 
 _REPLICATE_RE = re.compile(r"^replicate_(\d+)$")
 _QWEN3_SLUG_RE = re.compile(r"^(qwen3_[\d.]+b)_(?:non)?reasoning$")
+_TASK_NAME_RE = re.compile(r"^samples_(.+)_\d{4}-\d{2}-\d{2}T.*\.jsonl$")
+
+
+def _duplicate_task_files(sample_files: list[Path]) -> dict[str, list[Path]]:
+    """Group `sample_files` by task name (stripping the harness's own
+    per-run timestamp suffix); returns only tasks with more than one
+    file — a sign that an old run's output was never actually replaced by
+    a newer one. Found 2026-09-14: copying a "fresh" pilot run's output
+    over an existing directory doesn't overwrite anything, since
+    lm-eval-harness timestamps every filename uniquely — a stale run's
+    files and a fresh run's files for the same task end up sitting side
+    by side, and scoring both silently double-counts that task."""
+    by_task: dict[str, list[Path]] = defaultdict(list)
+    for f in sample_files:
+        match = _TASK_NAME_RE.match(f.name)
+        task = match.group(1) if match else f.name
+        by_task[task].append(f)
+    return {task: files for task, files in by_task.items() if len(files) > 1}
 
 
 def _reasoning_mode_from_slug(slug: str) -> str | None:
@@ -104,6 +123,20 @@ def main(argv: list[str] | None = None) -> int:
             print(
                 f"skipping {run_dir} (no results_*.json/samples_*.jsonl — "
                 "likely a total failure)",
+                file=sys.stderr,
+            )
+            continue
+
+        duplicates = _duplicate_task_files(sample_files)
+        if duplicates:
+            print(
+                f"skipping {run_dir}: more than one samples file for the "
+                f"same task(s) -- {sorted(duplicates)}. This usually means "
+                "a copy from another machine/run landed alongside an "
+                "older attempt's leftover output rather than replacing it "
+                "(lm-eval-harness timestamps every filename uniquely, so "
+                "a plain file copy never overwrites). Remove the stale "
+                "(older-timestamped) files and re-run.",
                 file=sys.stderr,
             )
             continue

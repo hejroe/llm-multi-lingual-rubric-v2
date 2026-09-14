@@ -31,7 +31,10 @@ import json
 from collections import defaultdict
 from pathlib import Path
 
-from analysis.behavioural_profile import behavioural_profile
+from analysis.behavioural_profile import (
+    behavioural_profile,
+    infrastructure_failure_rate,
+)
 from analysis.reliability import compute_reliability
 from analysis.rq_analysis import (
     correct_primary_confirmatory_set,
@@ -104,6 +107,13 @@ def _report_for_model(rows: list[dict], label: str) -> None:
         )
     else:
         print("  skipped: no rows to group")
+
+    print(f"\n--- Infrastructure-Failure rate (10.7), by language: {label} ---")
+    overall_rate = infrastructure_failure_rate(rows, group_by=())
+    print(f"  overall: {overall_rate.get((), 0.0):.1%}")
+    by_language = infrastructure_failure_rate(rows, group_by=("language",))
+    for (lang,), rate in sorted(by_language.items(), key=lambda kv: str(kv[0])):
+        print(f"  {lang}: {rate:.1%}")
 
     print(f"\n--- Behavioural Response Profile (10.2), by language: {label} ---")
     profile_items = behavioural_profile(rows, group_by=("language",)).items()

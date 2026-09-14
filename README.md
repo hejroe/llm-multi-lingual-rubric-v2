@@ -243,23 +243,33 @@ See `requirements.txt` for the local Python dependencies `scoring/` and
 separate from the `docker/` image, which only runs lm-evaluation-harness
 itself.
 
-**What's still open**: a real pilot run at actual corpus scale, with the
-3-way replication Protocol 9.3 specifies, across all seven registered
-candidate models, is now scripted (`scripts/run_pilot_ollama_models.sh`,
-`scripts/run_pilot_qwen3_llamacpp.sh` — see "Running the full pilot"
-above) but has not yet completed end-to-end: today's dev hardware has hit
-repeated whole-machine unresponsiveness partway through (plausibly
-thermal/resource contention on a laptop GPU, not a pipeline defect —
-`run_pilot_ollama_models.sh`'s own header comment has the investigation),
-so the full run to date is still incomplete, resumable via `--use_cache`
-each time it's restarted. Until it completes, RQ1 and RQ7 report
-themselves skipped: there's no paired language/variety data yet to
-compare. A known, documented gap (`scoring/io.py`'s module docstring):
-stock lm-eval-harness doesn't surface a per-item error/timeout signal into
+**Status, 2026-09-14: the first full pilot run has completed** — all
+seven registered candidate models (nine conditions, counting Qwen3's
+reasoning-mode split, ADR 0010), full corpus-v0.2 scale, 3-way replication
+(Protocol 9.3), 6,156 scored responses. See
+**[`docs/PILOT_RESULTS.md`](docs/PILOT_RESULTS.md)** for the actual
+findings (RQ1-RQ3, RQ6, RQ7, reliability, and Infrastructure-Failure rate,
+per model) and known caveats. Getting there required fixing real
+data-integrity and analysis-design bugs invisible until real multi-model
+data existed — see that document's own Section 10 and the git history
+around 2026-09-13/14 for what was found and fixed (stale duplicate run
+data, Qwen3 provenance, and pooling every model together before this pass
+split the analysis per model, per 10.2's own reporting grain).
+
+**What's still open**: the corpus's current scale leaves RQ1 and
+especially RQ7 statistically inconclusive (n=3 and n=1 pairs
+respectively — Limitations 12.2), and RQ6 has no German (primary
+language) Set E data yet to report against at all. `PILOT_RESULTS.md`
+Section 12 has the full list of recommended next steps. A known,
+documented gap (`scoring/io.py`'s module docstring): stock
+lm-eval-harness doesn't surface a per-item error/timeout signal into
 `--log_samples` the way 8.2/9.3 assume, so Infrastructure-Failure tagging
 can currently only catch an empty response, not an explicit
 harness-reported fault (this is exactly what `scripts/robust_run.py`
-reconciles against each task's expected item set instead).
+reconciles against each task's expected item set instead) — this pilot's
+empty-response rate turned out to be a genuine, substantial finding in
+its own right (`PILOT_RESULTS.md` Section 3), not just a fallback
+mechanism.
 
 Corpus/item authoring: `corpus/v0.1/` (2026-09-08) holds the first real
 corpus release across all six item families; `corpus/v0.2/` (2026-09-09)

@@ -22,7 +22,7 @@ long, or how it becomes reviewable or citable outside this project folder
 | Raw model responses | Harness runs against each candidate model (7.3/9.3) | JSONL, one line per (item, model, language, condition) per 9.6's run-level provenance capture | Scales with corpus × models × languages × conditions; still pilot scale | No | No |
 | Scored/annotated data | Rubric application (Section 8) over raw responses | JSONL/CSV, rubric category and overlay-axis tags appended to each response record | Same row count as raw responses | No | No |
 | Amendment Log (13) and Ethics Register (11.4) entries | Manual, by the study owner | Markdown tables within `STUDY_PROTOCOL.md` | Small, append-only | No | Yes — sovereignty disputes and institutional-criticism/lese-majeste items (Protocol Section 11); not personally identifiable, but politically/ethically sensitive by subject matter, which is why Section 11's review gate exists |
-| Analysis outputs (10) | Statistical analysis over scored data | CSV/plots plus a written results report (not yet produced) | Small | No | No |
+| Analysis outputs (10) | Statistical analysis over scored data | Regenerable via `analysis.cli`; first written results report produced 2026-09-14 (`docs/PILOT_RESULTS.md`) | Small | No | No |
 
 No participant or human-subject data is collected at any stage. All corpus
 items are drawn from, or derived from, existing public benchmarks and

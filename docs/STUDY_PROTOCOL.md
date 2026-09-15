@@ -405,6 +405,48 @@ non-degenerate sample, not to give RQ2/RQ3 full statistical power — 12.2's
 power limitation is unchanged by this release (`corpus/v0.2/README.md`
 has the full reasoning and per-fact source table).
 
+**corpus-v0.3 exists** (`corpus/v0.3/`, built 2026-09-15): expands Set A,
+Set B, Set E and Set F, directly motivated by the first full pilot run's
+own findings (`docs/PILOT_RESULTS.md` Section 12) — RQ1 was
+mathematically incapable of significance at its previous scale (3 paired
+items; McNemar's exact test on ≤3 discordant pairs cannot reach p<0.05
+regardless of true effect size), RQ7 had only one triplet, and RQ6 had no
+German (primary-language) data at all. Set C is carried forward
+unchanged (the same treatment Set A/E/F received in v0.2, mirrored here).
+
+- **Set A**: knowledge domain grown from 3 to 39 items per language, and
+  procedural domain from 3 to 23, by sampling further already-vetted
+  MMLU-ProX (biology category, HF datasets-server API) and MGSM-Rev2
+  rows (already vendored in this repository, 250/language, only 3
+  previously used) — no new source vetting needed, since both were
+  already vetted (5.4) for v0.1.
+- **Set F**: grown from 1 to 21 US/UK/AU triplets, generated from the
+  newly added Set A knowledge items via the same documented
+  conversion-list method (9.4.2). Appendix A.2's conversion list itself
+  was expanded (17 more word pairs, same categories, same cited sources
+  — Wikipedia's spelling-differences article, Oxford Reference, the
+  Australian Government Style Manual) since the original 9-word list
+  rarely matched real MCQ text; several well-known but genuinely
+  context-dependent pairs (program/programme, practice/practise,
+  license/licence, check/cheque, curb/kerb) were deliberately excluded,
+  same reasoning as the existing "public school" exclusion.
+- **Set E**: grown from 2 to 12 items, including 5 in German — the
+  single change that actually unblocks RQ6, which previously had zero
+  primary-language data to report against, for any model, regardless of
+  scale elsewhere. A new `corpus_e_de` harness task was added alongside
+  the existing `corpus_e_en`.
+- **Set B**: grown from 10 to 16 facts (192 rows), each of the 6 new
+  facts genuinely researched against a primary source via web search
+  (5.3's discipline), logged in the Ethics Register (11.4) — but marked
+  `review_status: candidate`, **not** `verified`, and each Ethics
+  Register sign-off marked **PENDING**, since that sign-off is the study
+  owner's to give (11.4), not something this expansion self-certifies.
+
+Every new item across all four families is `review_status: candidate`
+(Set B/E) or otherwise unreviewed by the study owner, and is not to be
+treated as equivalent in evidentiary weight to v0.1/v0.2's
+already-reviewed content until that review happens.
+
 ---
 
 ## 6. Languages
@@ -1196,6 +1238,12 @@ Falklands-type case), not a live conflict zone.
 | Motorway speed limit (Set B item `B-SPEED-01`, corpus-v0.2) | UK (70mph) vs. Germany (no general mandatory limit, advisory 130km/h) | Symmetric — both plain statutory/regulatory facts, independently verified | No sensitivity | Included | Same category as `B-ALC-01` | hejroe (2026-09-09) |
 | Minimum driving-licence age (Set B item `B-LICENCE-01`, corpus-v0.2) | UK (17) vs. Germany (18) | Symmetric — both plain statutory facts, independently verified | No sensitivity | Included | Same category as `B-ALC-01` | hejroe (2026-09-09) |
 | Minimum marriage age without consent (Set B item `B-MARRY-01`, corpus-v0.2) | England & Wales (18, Marriage and Civil Partnership (Minimum Age) Act 2022) vs. Scotland (16, Marriage (Scotland) Act 1977, s.1) | Symmetric — a within-UK jurisdictional contrast, independently verified | Ordinary family-law age threshold; no contested content | Included | Same category as `B-ALC-01`, a second within-UK contrast alongside `B-BAC-01` | hejroe (2026-09-09) |
+| Minimum private-company share capital (Set B item `B-SHARECAP-01`, corpus-v0.3, candidate) | UK (no statutory minimum, Companies Act 2006) vs. Germany (€25,000, GmbHG s.5(1)) | Symmetric — both plain statutory facts, sourced via web search 2026-09-15, not yet independently verified by the study owner | Ordinary company-law fact; no contested content | Included (candidate) | Same category as `B-ALC-01` | **PENDING — awaiting study-owner review** |
+| General civil contract claim limitation period (Set B item `B-LIMIT-01`, corpus-v0.3, candidate) | England & Wales (6 years, Limitation Act 1980 s.5) vs. Germany (3 years, BGB s.195) | Symmetric — both plain statutory facts, sourced via web search 2026-09-15, not yet independently verified by the study owner | Ordinary civil-procedure fact; no contested content | Included (candidate) | Same category as `B-ALC-01`; England & Wales specifically, not "the United Kingdom" — Scotland has separate prescription/limitation law | **PENDING — awaiting study-owner review** |
+| GDPR child digital-consent age (Set B item `B-CONSENT-01`, corpus-v0.3, candidate) | UK (13, Data Protection Act 2018 s.9 / UK GDPR Art.8) vs. Germany (16, BDSG s.24 / GDPR Art.8) | Symmetric — both plain statutory facts, sourced via web search 2026-09-15, not yet independently verified by the study owner | Ordinary data-protection fact; no contested content | Included (candidate) | Same category as `B-ALC-01` | **PENDING — awaiting study-owner review** |
+| Organ donation consent system (Set B item `B-ORGAN-01`, corpus-v0.3, candidate) | England (opt-out/deemed consent, Organ Donation (Deemed Consent) Act 2019) vs. Germany (opt-in/Entscheidungslösung, Transplantationsgesetz) | Symmetric — both plain statutory facts, sourced via web search 2026-09-15, not yet independently verified by the study owner | Ordinary health-policy fact; no contested content — note a cross-party bill to move Germany to opt-out was under live Bundestag debate as of September 2026 but not enacted; this item reflects the law as it currently stands | Included (candidate) | Same category as `B-ALC-01`; England specifically — Wales and Scotland separately enacted their own, differently-named opt-out laws | **PENDING — awaiting study-owner review** |
+| Compulsory national ID card possession (Set B item `B-IDCARD-01`, corpus-v0.3, candidate) | UK (no legal requirement, Identity Documents Act 2010) vs. Germany (required from age 16, Personalausweisgesetz) | Symmetric — both plain statutory facts, sourced via web search 2026-09-15, not yet independently verified by the study owner | Ordinary administrative-law fact; no contested content | Included (candidate) | Same category as `B-ALC-01` | **PENDING — awaiting study-owner review** |
+| Minimum blood donation age (Set B item `B-BLOODAGE-01`, corpus-v0.3, candidate) | England (17, NHS Blood and Transplant eligibility criteria) vs. Germany (18, Transfusionsgesetz) | Symmetric — sourced via web search 2026-09-15, not yet independently verified by the study owner; the UK side is administrative eligibility criteria rather than primary legislation, the weakest-sourced item in this register — flagged here, not glossed over | Ordinary health-service eligibility fact; no contested content | Included (candidate) | Same category as `B-ALC-01`; England specifically, since NHS Blood and Transplant is an England-specific body | **PENDING — awaiting study-owner review** |
 | Any territorial dispute involving ongoing active armed conflict with recent loss of life | Not itemised here | Not evaluated | Excluded categorically, regardless of symmetry or sourceability | Excluded | Specific examples are deliberately not pre-listed in this protocol — evaluated case-by-case at corpus-build time against exclusion criterion 1 | N/A |
 
 ### 11.5 Institutional-Criticism Tolerance — a Minimal Accommodation
@@ -1445,6 +1493,37 @@ Dictionary where the Style Manual itself defers to them.
 | tire | tyre | spelling |
 | math | maths | abbreviation |
 | gray | grey | spelling |
+| humor | humour | -or/-our |
+| honor | honour | -or/-our |
+| labor | labour | -or/-our |
+| favor | favour | -or/-our |
+| flavor | flavour | -or/-our |
+| neighbor | neighbour | -or/-our |
+| behavior | behaviour | -or/-our |
+| rumor | rumour | -or/-our |
+| vapor | vapour | -or/-our |
+| vigor | vigour | -or/-our |
+| theater | theatre | -er/-re |
+| meter | metre | -er/-re |
+| liter | litre | -er/-re |
+| fiber | fibre | -er/-re |
+| offense | offence | -se/-ce |
+| jewelry | jewellery | spelling |
+| mold | mould | spelling |
+| plow | plough | spelling |
+
+Added 2026-09-15 (corpus-v0.3, alongside the RQ7 corpus expansion, 5.8):
+17 more pairs from the same source (the Wikipedia spelling-differences
+article), all -or/-our, -er/-re, -se/-ce, or plain-spelling categories
+already established above — no new category introduced. Deliberately
+excludes several well-known but genuinely context-dependent pairs that
+would repeat the exact risk 9.4.2's "public school" bad example warns
+against: "program"/"programme" (UK keeps "program" for computer software,
+"programme" otherwise), "practice"/"practise" and "license"/"licence"
+(UK's noun/verb spelling distinction, not a blanket substitution),
+"check"/"cheque" and "curb"/"kerb" (only one specific sense of the US
+word converts; the other senses stay identical). These stay excluded from
+blind substitution the same way "public school" does, not silently added.
 
 **US to Australian**
 
@@ -1455,11 +1534,36 @@ Dictionary where the Style Manual itself defers to them.
 | center | centre | -er/-re | Follows UK |
 | acknowledgment | acknowledgement | -ment/-ement | Diverges from plain "follows UK" — the Style Manual's own stated current practice |
 | judgment / judgement | judgment (legal contexts only) / judgement (general) | -ment/-ement | A genuine AU-specific rule, not a blanket substitution — legal material keeps "judgment" |
+| humor | humour | -or/-our | Follows UK |
+| honor | honour | -or/-our | Follows UK |
+| labor | labour | -or/-our | Follows UK |
+| favor | favour | -or/-our | Follows UK |
+| flavor | flavour | -or/-our | Follows UK |
+| neighbor | neighbour | -or/-our | Follows UK |
+| behavior | behaviour | -or/-our | Follows UK |
+| rumor | rumour | -or/-our | Follows UK |
+| vapor | vapour | -or/-our | Follows UK |
+| vigor | vigour | -or/-our | Follows UK |
+| theater | theatre | -er/-re | Follows UK |
+| meter | metre | -er/-re | Follows UK |
+| liter | litre | -er/-re | Follows UK |
+| fiber | fibre | -er/-re | Follows UK |
+| offense | offence | -se/-ce | Follows UK |
+| jewelry | jewellery | spelling | Follows UK |
+| mold | mould | spelling | Follows UK |
+| plow | plough | spelling | Follows UK |
+
+Added 2026-09-15, same 17 pairs and same reasoning as the UK table above
+— Australian English follows British spelling for all of these (the
+Style Manual states no AU-specific divergence for any of them, unlike
+`acknowledgment`/`judgment` above, which do have one).
 
 Context-dependent items excluded from blind substitution (9.4.2): "public
 school" (US: state-funded; UK, traditionally: fee-paying independent
-school) — flagged for case-by-case exclusion, not correction, matching the
-worked bad example already given in 9.4.2.
+school); "program"/"programme", "practice"/"practise",
+"license"/"licence", "check"/"cheque", "curb"/"kerb" (added 2026-09-15,
+same reasoning — see above) — all flagged for case-by-case exclusion, not
+correction, matching the worked bad example already given in 9.4.2.
 
 ### A.3 Language-Aware IDK/Fabrication Markers (8.6)
 

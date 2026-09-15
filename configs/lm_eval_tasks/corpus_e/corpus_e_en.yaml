@@ -1,12 +1,14 @@
-# corpus_e (Set E, Contamination-Check Set, RQ6) — English only at this
-# corpus version (5.5/5.8): perturbed twins of Set A items, run alongside
-# their originals (corpus_a_knowledge_en). No process_docs filter needed;
-# the whole file is one task.
+# corpus_e (Set E, Contamination-Check Set, RQ6): perturbed twins of Set A
+# items, run alongside their originals (corpus_a_knowledge_en/_de).
+# corpus-v0.3 (2026-09-15): set_e.csv gained a `language` column and
+# German rows, so this task now needs process_docs to filter to English
+# only — previously "the whole file is one task" since it was English-only.
 task: corpus_e_en
 dataset_path: csv
 dataset_kwargs:
-  data_files: /corpus/v0.2/set_e.csv
+  data_files: /corpus/v0.3/set_e.csv
 test_split: train
+process_docs: !function utils.filter_en
 output_type: generate_until
 target_delimiter: ""
 doc_to_text: '{{"Question: "+question_text+"\nAnswer:"}}'
@@ -30,4 +32,4 @@ metric_list:
     ignore_case: true
     ignore_punctuation: true
 metadata:
-  version: 0.1
+  version: 0.2

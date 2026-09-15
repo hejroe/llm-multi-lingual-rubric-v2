@@ -1,5 +1,5 @@
 task: corpus_f_uk
 include: _common_yaml
 dataset_kwargs:
-  data_files: /corpus/v0.2/set_f.csv
+  data_files: /corpus/v0.3/set_f.csv
 process_docs: !function utils.filter_uk

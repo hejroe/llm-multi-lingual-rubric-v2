@@ -34,7 +34,7 @@ set -euo pipefail
 
 COOLDOWN_SECONDS="${COOLDOWN_SECONDS:-45}"
 
-TASKS="corpus_a_knowledge_en,corpus_a_knowledge_de,corpus_a_knowledge_sw,corpus_a_knowledge_bn,corpus_a_procedural_en,corpus_a_procedural_de,corpus_a_procedural_sw,corpus_a_procedural_bn,corpus_b_en,corpus_b_de,corpus_b_sw,corpus_b_bn,corpus_c_en,corpus_c_de,corpus_c_sw,corpus_c_bn,corpus_e_en,corpus_f_uk,corpus_f_au"
+TASKS="corpus_a_knowledge_en,corpus_a_knowledge_de,corpus_a_knowledge_sw,corpus_a_knowledge_bn,corpus_a_procedural_en,corpus_a_procedural_de,corpus_a_procedural_sw,corpus_a_procedural_bn,corpus_b_en,corpus_b_de,corpus_b_sw,corpus_b_bn,corpus_c_en,corpus_c_de,corpus_c_sw,corpus_c_bn,corpus_e_en,corpus_e_de,corpus_f_uk,corpus_f_au"
 
 # Parallel arrays (model tags contain ':' themselves, so packing tag+slug
 # into one delimited string is error-prone -- kept as two plain arrays

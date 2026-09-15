@@ -1,0 +1,36 @@
+# corpus_e (Set E, Contamination-Check Set, RQ6), German — added
+# corpus-v0.3 (2026-09-15) alongside 5 new German perturbed-twin rows in
+# set_e.csv, specifically because RQ6 (10.5) had no primary-language
+# (German) comparison at all without it. Candidate content pending
+# study-owner review (review_status column in set_e.csv), same as
+# corpus_a/corpus_b's German tasks.
+task: corpus_e_de
+dataset_path: csv
+dataset_kwargs:
+  data_files: /corpus/v0.3/set_e.csv
+test_split: train
+process_docs: !function utils.filter_de
+output_type: generate_until
+target_delimiter: ""
+doc_to_text: '{{"Frage: "+question_text+"\nAntwort:"}}'
+doc_to_target: '{{gold_answer}}'
+generation_kwargs:
+  until:
+    - "Frage:"
+    - "</s>"
+    - "<|im_end|>"
+  do_sample: false
+  temperature: 0.0
+  max_gen_toks: 2048
+filter_list:
+  - name: take_first
+    filter:
+      - function: take_first
+metric_list:
+  - metric: exact_match
+    aggregation: mean
+    higher_is_better: true
+    ignore_case: true
+    ignore_punctuation: true
+metadata:
+  version: 0.1

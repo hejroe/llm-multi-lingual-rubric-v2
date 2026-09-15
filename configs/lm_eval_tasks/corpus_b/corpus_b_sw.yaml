@@ -1,7 +1,7 @@
 task: corpus_b_sw
 include: _common_yaml
 dataset_kwargs:
-  data_files: /corpus/v0.2/set_b.csv
+  data_files: /corpus/v0.3/set_b.csv
 process_docs: !function utils.filter_sw
 doc_to_text: '{{"Swali: "+question_text+"\nAnswer:"}}'
 generation_kwargs:

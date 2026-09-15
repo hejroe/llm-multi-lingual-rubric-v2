@@ -37,22 +37,27 @@ Directly motivated by the first full pilot run's own findings
   2). Appendix A.2's conversion list itself was expanded (17 more word
   pairs) to actually find enough convertible content in real item text.
 
-## Review status — read this before treating any new item as settled
+## Review status
 
-**Every new row in this release is `review_status: candidate`, not
-`verified`/`accepted`/`translation-reviewed`.** This is deliberate:
-5.3/9.4.1/11.4 all treat human sign-off (the study owner's, specifically)
-as the step that makes an item usable evidence, not merely present in
-the corpus. The new items were built by an AI assistant (Claude) acting
-on the study owner's explicit direction ("I actually think that you are
-well placed to do all of this and I will simply review the final work"),
-with each Set B fact backed by real web research against a cited primary
-source (not fabricated), and each Set E/F item built via exactly the
-documented mechanical/paraphrase methods 9.4.1/9.4.2 specify — but none
-of it has passed the human review those sections require. Until the
-study owner reviews and re-marks it, corpus-v0.3's new content should be
-read as "drafted to the same standard as v0.1/v0.2, not yet checked
-against that standard by a human."
+Every new row in this release was drafted as `review_status: candidate`,
+not `verified`/`accepted`/`translation-reviewed` — 5.3/9.4.1/11.4 all
+treat human sign-off (the study owner's, specifically) as the step that
+makes an item usable evidence, not merely present in the corpus. The new
+items were built by an AI assistant (Claude) acting on the study owner's
+explicit direction ("I actually think that you are well placed to do all
+of this and I will simply review the final work"), with each Set B fact
+backed by real web research against a cited primary source (not
+fabricated), and each Set E/F item built via exactly the documented
+mechanical/paraphrase methods 9.4.1/9.4.2 specify.
+
+**That review has since been completed**: the study owner (hejroe,
+2026-09-15) reviewed all of corpus-v0.3, "paying special attention to
+the new items," with no amendments or comments. `review_status` in
+`set_b.csv`/`set_e.csv` and the Ethics Register sign-off column (11.4)
+both reflect that sign-off — `verified`/`translation-reviewed` (Set B)
+and `accepted` (Set E), matching v0.1/v0.2's own already-reviewed
+content, not left as `candidate` after the review that word was
+signalling had actually happened.
 
 ## Provenance — Set A (knowledge domain, 36 new items across 4 languages)
 

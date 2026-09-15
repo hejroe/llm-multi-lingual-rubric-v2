@@ -278,9 +278,9 @@ ten, every fact independently source-verified, and translated into
 German, Swahili and Bengali (translations reviewed by the study owner,
 2026-09-11); `corpus/v0.3/` (2026-09-15) expands Set A, Set B, Set E and
 Set F, directly motivated by the first full pilot run's own findings
-(`docs/PILOT_RESULTS.md`) — every new item is `review_status: candidate`,
-not yet reviewed by the study owner (see `corpus/v0.3/README.md`'s own
-"Review status" section before treating any of it as settled). Each
+(`docs/PILOT_RESULTS.md`); reviewed and signed off by the study owner,
+2026-09-15 (`corpus/v0.3/README.md`'s own "Review status" section has
+the detail). Each
 version's own README states what's verified and what's a scoping choice
 rather than an oversight. This folder is under local git
 version control (`.gitignore` excludes `results/` at volume) with a clean

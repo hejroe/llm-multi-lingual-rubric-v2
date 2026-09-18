@@ -72,3 +72,21 @@ def test_numeric_gold_answer_with_trailing_symbol_still_matches():
 def test_shows_arithmetic_working_detects_shown_steps():
     assert shows_arithmetic_working("3 x 8 = 25, 25 - 5 = 20")
     assert not shows_arithmetic_working("The answer is 20.")
+
+
+def test_bengali_digit_numeral_matches_latin_gold_answer():
+    # Regression (2026-09-16): Bengali digit glyphs (০-৯, U+09E6-U+09EF)
+    # have no NFKD decomposition to Latin digits, so a Bengali-scripted
+    # numeric answer never matched a gold_answer stored in Latin digits --
+    # every gold_answer in this corpus is, whether from the vendored
+    # MGSM-Rev2 TSVs or hand-authored Set B/C content. This understated
+    # Bengali Correct-rate for any model answering with Bengali numerals.
+    assert matches_gold_answer("উত্তর হল ৭০০০০ ডলার।", "70000")
+    assert matches_gold_answer("আপনার বয়স ১৮ হতে হবে।", "18")
+
+
+def test_bengali_digit_numeral_still_respects_word_boundary():
+    # The Bengali-digit translation must not defeat the existing embedded-
+    # number protection (2026-09-13 regression, above): "১৮০০" translates
+    # to "1800", which must not register as containing gold "18".
+    assert not matches_gold_answer("মূল্য ১৮০০ টাকা।", "18")

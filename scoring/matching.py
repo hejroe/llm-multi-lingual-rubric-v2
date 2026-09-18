@@ -53,6 +53,22 @@ def _strip_accents(text: str) -> str:
     return "".join(ch for ch in decomposed if not unicodedata.combining(ch))
 
 
+_BENGALI_DIGIT_TRANSLATION = str.maketrans("০১২৩৪৫৬৭৮৯", "0123456789")
+
+
+def _normalise_digits(text: str) -> str:
+    """Bengali digit glyphs (U+09E6-U+09EF) have no Unicode decomposition to
+    their Latin equivalents, so NFKD normalisation in `_strip_accents` never
+    touches them. Every gold_answer in this corpus (vendored MGSM-Rev2 TSVs,
+    hand-authored Set B/C content) is stored in Latin digits, so a Bengali
+    response using Bengali-script numerals for its final answer (e.g.
+    "৭০০০০") never matched at all before this — found via a real test
+    failure, 2026-09-16, the same class of gap the original review's
+    English-only-matching bug was for the whole language, just for numeric
+    answers specifically."""
+    return text.translate(_BENGALI_DIGIT_TRANSLATION)
+
+
 def _load_variety_conversion() -> dict:
     with open(_DATA_DIR / "variety_conversion.json", encoding="utf-8") as f:
         data = json.load(f)
@@ -71,6 +87,7 @@ def normalise_for_matching(text: str) -> str:
     """
     text = text.strip().lower()
     text = _strip_accents(text)
+    text = _normalise_digits(text)
     text = _PUNCTUATION_RE.sub("", text)
     text = _WHITESPACE_RE.sub(" ", text).strip()
     return text

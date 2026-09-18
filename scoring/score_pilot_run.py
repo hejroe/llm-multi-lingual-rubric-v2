@@ -17,9 +17,11 @@ import argparse
 import re
 import sys
 from collections import defaultdict
+from datetime import datetime, timezone
 from pathlib import Path
 
 from scoring.io import (
+    RunProvenance,
     auto_detect_model_digest,
     provenance_from_aggregated_results,
     score_jsonl_file,
@@ -29,6 +31,7 @@ from scoring.io import (
 _REPLICATE_RE = re.compile(r"^replicate_(\d+)$")
 _QWEN3_SLUG_RE = re.compile(r"^(qwen3_[\d.]+b)_(?:non)?reasoning$")
 _TASK_NAME_RE = re.compile(r"^samples_(.+)_\d{4}-\d{2}-\d{2}T.*\.jsonl$")
+_RUN_TIMESTAMP_DIR_RE = re.compile(r"^(\d{8})T(\d{6})Z$")
 
 
 def _duplicate_task_files(sample_files: list[Path]) -> dict[str, list[Path]]:
@@ -78,6 +81,64 @@ def _correct_qwen3_provenance(slug: str) -> tuple[str, str] | None:
     return f"qwen3:{size}", "llamacpp"
 
 
+def _run_timestamp_from_pilot_root(pilot_root: Path) -> str | None:
+    """`pilot_root`'s own directory name is the UTC run-start timestamp
+    (`scripts/run_pilot_*.sh`'s `RUN_TIMESTAMP`, e.g. `20260915T195159Z`)
+    whenever the caller points `--pilot-root` at that timestamped
+    subfolder rather than `results/pilot` itself -- the documented usage
+    for scoring one specific run. Used only as a fallback run_timestamp
+    when a run has no aggregated `results_*.json` of its own to read one
+    from (see `_fallback_provenance`); returns `None` if the directory
+    name doesn't match, rather than guessing."""
+    match = _RUN_TIMESTAMP_DIR_RE.match(pilot_root.name)
+    if not match:
+        return None
+    try:
+        dt = datetime.strptime(pilot_root.name, "%Y%m%dT%H%M%SZ").replace(
+            tzinfo=timezone.utc
+        )
+    except ValueError:
+        return None
+    return dt.isoformat()
+
+
+def _fallback_provenance(
+    *,
+    pilot_root: Path,
+    slug: str,
+    corpus_version: str,
+    reasoning_mode: str | None,
+    replicate_index: int,
+) -> RunProvenance | None:
+    """Build a RunProvenance for a run with sample files but no aggregated
+    `results_*.json` -- a total failure every attempt crashed on before
+    lm-eval-harness ever wrote one, reconciled by `robust_run.py` into
+    explicit `*.missing.jsonl` stubs for every item (9.3) rather than
+    losing the condition silently. `provenance_from_aggregated_results`
+    has nothing to read in this case, so identity is recovered the same
+    way `_correct_qwen3_provenance` already recovers it for a *completed*
+    Qwen3 run: from the directory slug, since Qwen3's `--model_args` uses
+    a generic `model=llamacpp` placeholder either way -- the aggregated
+    file was never the real source of truth for Qwen3 identity, only for
+    the run timestamp, which falls back to `pilot_root`'s own name.
+    Returns `None` if the slug isn't a recognised Qwen3 condition, since
+    every other model's real identity genuinely lives only in the missing
+    results.json -- an unrecoverable case, not a guess to paper over.
+    """
+    corrected = _correct_qwen3_provenance(slug)
+    if corrected is None:
+        return None
+    model_name, backend = corrected
+    return RunProvenance(
+        corpus_version=corpus_version,
+        model_name=model_name,
+        backend=backend,
+        run_timestamp=_run_timestamp_from_pilot_root(pilot_root) or "unknown",
+        reasoning_mode=reasoning_mode,
+        replicate_index=replicate_index,
+    )
+
+
 def find_runs(pilot_root: Path):
     """Yield (slug, replicate_index, run_dir) for every scored-able run
     directory under `pilot_root` — one per (model/condition, replicate)."""
@@ -119,10 +180,9 @@ def main(argv: list[str] | None = None) -> int:
     for slug, replicate_index, run_dir in find_runs(args.pilot_root):
         results_jsons = sorted(run_dir.glob("results_*.json"))
         sample_files = sorted(run_dir.glob("samples_*.jsonl"))
-        if not results_jsons or not sample_files:
+        if not sample_files:
             print(
-                f"skipping {run_dir} (no results_*.json/samples_*.jsonl — "
-                "likely a total failure)",
+                f"skipping {run_dir} (no samples_*.jsonl at all — nothing to score)",
                 file=sys.stderr,
             )
             continue
@@ -142,16 +202,42 @@ def main(argv: list[str] | None = None) -> int:
             continue
 
         reasoning_mode = _reasoning_mode_from_slug(slug)
-        provenance = provenance_from_aggregated_results(
-            results_jsons[-1],
-            corpus_version=args.corpus_version,
-            reasoning_mode=reasoning_mode,
-            replicate_index=replicate_index,
-        )
 
-        corrected = _correct_qwen3_provenance(slug)
-        if corrected is not None:
-            provenance.model_name, provenance.backend = corrected
+        if results_jsons:
+            provenance = provenance_from_aggregated_results(
+                results_jsons[-1],
+                corpus_version=args.corpus_version,
+                reasoning_mode=reasoning_mode,
+                replicate_index=replicate_index,
+            )
+            corrected = _correct_qwen3_provenance(slug)
+            if corrected is not None:
+                provenance.model_name, provenance.backend = corrected
+        else:
+            # No aggregated results_*.json -- every attempt crashed before
+            # lm-eval-harness wrote one, and robust_run.py reconciled the
+            # condition into explicit *.missing.jsonl stubs instead (9.3).
+            # This is a real, scoreable total-failure condition (10.7's
+            # Infrastructure-Failure rate), not nothing to report --
+            # silently dropping it here would understate that rate for
+            # this condition as if it were never tested at all.
+            provenance = _fallback_provenance(
+                pilot_root=args.pilot_root,
+                slug=slug,
+                corpus_version=args.corpus_version,
+                reasoning_mode=reasoning_mode,
+                replicate_index=replicate_index,
+            )
+            if provenance is None:
+                print(
+                    f"skipping {run_dir}: no results_*.json and slug "
+                    f"{slug!r} isn't a recognised Qwen3 condition, so "
+                    "model identity can't be recovered from the slug "
+                    "alone -- a genuine total failure with no way to "
+                    "attribute it to a specific model/backend.",
+                    file=sys.stderr,
+                )
+                continue
 
         if provenance.model_digest is None and not args.no_auto_digest:
             cache_key = (provenance.model_name, provenance.backend)

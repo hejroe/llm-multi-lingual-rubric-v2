@@ -25,3 +25,7 @@ SOFTWARE.
 This licence applies to code in this repository. Documentation and data
 (the Study Protocol, ADRs, and corpus files under `corpus/`) are licensed
 separately under CC BY 4.0 — see `DATA_MANAGEMENT_PLAN.md` Section 5.
+
+Exception: the vendored MGSM-Rev2 data under
+`configs/lm_eval_tasks/mgsm_rev2/data/` is licensed CC BY-SA 4.0, not CC
+BY 4.0 — see that directory's own `NOTICE.md`.

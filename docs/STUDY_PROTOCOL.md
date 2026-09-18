@@ -1,8 +1,8 @@
 # Study Protocol
 
-**Version:** 0.26 (DRAFT — not frozen; section 1 pending, deferred by request)
+**Version:** 0.29 (DRAFT — not frozen; section 1 pending, deferred by request)
 **Status:** DRAFT
-**Last updated:** 2026-09-11
+**Last updated:** 2026-09-16
 
 Amendments after freeze are logged in Section 13.
 
@@ -280,9 +280,9 @@ exclusion log.
 | Source | Version / snapshot date | Ownership/provenance check | Licence | Contamination/quality check | Currency check | Decision | Reasoning |
 |---|---|---|---|---|---|---|---|
 | MMLU-Pro (TIGER-Lab) | HF release, accessed 2026-09-03 | Clear — TIGER-Lab, NeurIPS 2024 paper | MIT | Designed to reduce contamination vs. original MMLU (harder distractors); no independent RQ6-style check yet performed | Actively maintained, live leaderboard | Included (Sets A/E) | Clear ownership, permissive licence, no share-alike obligation |
-| MGSM-Rev2 (Google Research) | GitHub release, accessed 2026-09-03 | Clear — Google Research; corrected/retranslated successor to original MGSM, itself built on GSM8K (OpenAI, MIT) | CC BY-SA 4.0 | Not yet independently checked; supersedes original MGSM's known translation errors | Actively maintained; explicit drop-in replacement for original MGSM | Included (Sets A/E) | Commercial use permitted; its share-alike obligation for any derivative applies to Set E/F items built from it. The study owner has determined (2026-09-11) that this project's own open publication under CC BY 4.0 satisfies that obligation (12.9) |
+| MGSM-Rev2 (Google Research) | GitHub release, accessed 2026-09-03 | Clear — Google Research; corrected/retranslated successor to original MGSM, itself built on GSM8K (OpenAI, MIT) | CC BY-SA 4.0 | Not yet independently checked; supersedes original MGSM's known translation errors | Actively maintained; explicit drop-in replacement for original MGSM | Included (Sets A/E) | Commercial use permitted; its share-alike obligation for any derivative applies to Set E/F items built from it. Corrected 2026-09-16 (12.9): the project's general CC BY 4.0 publication does not discharge this obligation — no current Set E/F item is actually affected (all derive from the MIT-licensed MMLU-ProX side of Set A instead), but the vendored TSVs themselves still need a BY-SA notice, and any future MGSM-Rev2-derived item must carry CC BY-SA 4.0 specifically |
 | Original MGSM (Google Research / Surge AI) | url-nlp repo | Mixed — GSM8K base (OpenAI, MIT) plus a separately licensed translation layer | CC BY-SA 4.0 / MIT (mixed) | Known translation errors, corrected in Rev2 | Superseded by MGSM-Rev2 | Excluded — superseded | Use MGSM-Rev2 instead; retained here only as an audit note |
-| AfriMGSM / IrokoBench (Masakhane) | HF release, accessed 2026-09-03 | Clear — Masakhane NLP, named maintainer contact | Apache-2.0 | Not yet independently checked | Actively maintained (ongoing Masakhane project) | Included (Sets A/E) | Clear ownership, permissive licence, extends language coverage to African languages |
+| AfriMGSM / IrokoBench (Masakhane) | HF release, accessed 2026-09-03 | Clear — Masakhane NLP, named maintainer contact | Apache-2.0 | Not yet independently checked | Actively maintained (ongoing Masakhane project) | Included, not currently drawn on | Passed vetting and remains available for a later language expansion, but 3.3's own account found it was not strictly necessary for this pilot's language set once MGSM-Rev2's coverage was confirmed (6.3) — no corpus item currently sources from it; corrected 2026-09-16 to match 3.3 rather than reading as a used-but-unlogged source |
 | BorderLines (Li, Haider, Callison-Burch — NAACL 2024) | GitHub repo, accessed 2026-09-03 | Unclear — no LICENSE file found in the repository | None stated | Not checked — blocked by the licence gap | N/A | Excluded (pending) | No licence found; absent one, default copyright grants no reuse rights. Not to be used until the authors confirm terms in writing — this is the case 5.3's ownership/provenance check exists to catch |
 | MMLU-ProX (li-lab) | HF release, accessed 2026-09-03 | Clear — li-lab, EMNLP 2025 paper; distinct organisation from MMLU-Pro/TIGER-Lab | MIT | Not yet independently checked | Actively maintained, recent (2025) release | Included (Sets A/E) | Clear ownership, permissive licence, no share-alike obligation; covers all Section 6 candidate languages |
 
@@ -447,6 +447,23 @@ changes, "paying special attention to the new items," no amendments),
 and `review_status` and the Ethics Register sign-off column below both
 reflect that sign-off, not the pending state this paragraph originally
 described at authoring time.
+
+**corpus-v0.4 exists** (`corpus/v0.4/`, built 2026-09-16): expands Set E
+only, directly motivated by a review finding that RQ6-DE's McNemar test
+remained mathematically incapable of significance even after `v0.3` —
+5 German items gives a best-case floor of `2*(0.5)^5=0.0625`, still above
+0.05; `n>=6` is the bare minimum. Set E grows from 12 to 26 rows (7 new
+facts x en/de, drawn from previously-unused Set A knowledge items),
+bringing the German count to 12. Set A, Set B and Set C are carried
+forward unchanged; Set F is carried forward with one disclosed
+correctness fix (`F-KNOW-10`'s unconverted "catalyze," a gap in the
+`-ize/-ise` mechanism that a `-yze/-yse` word falls outside of — the
+`v0.3` copy is left as published, since a pilot run was already using it
+at the time this was found; `corpus/v0.4/README.md` has the full
+reasoning). Every new Set E row is `review_status: candidate` — **not yet
+reviewed by the study owner, and not usable as confirmatory RQ6-DE
+evidence until that review happens**, per this section's own established
+discipline.
 
 ---
 
@@ -762,6 +779,23 @@ validation — the underlying ambiguity is a genuine property of
 natural-language response classification, not a solved problem, and is
 restated in Section 12.
 
+**Sensitivity gap, added 2026-09-16.** A Heuristic-Guidance-only sample
+validates the ambiguous boundary but cannot measure IDK-detector *false
+negatives* — a response that should have triggered an IDK marker (8.6,
+A.3) but didn't is tagged High-Confidence wrong-answer, never
+Heuristic-Guidance, and so is structurally excluded from ever being
+sampled by this audit. This risk is not evenly spread: A.3's marker lists
+currently carry only 2 entries each for Swahili and Bengali, against 5 for
+English, so under-coverage in one language's list is plausible and, under
+the audit design as originally specified, unmeasurable. The audit is
+extended to also draw a per-language random sample from responses *not*
+tagged IDK, specifically to estimate this false-negative rate per
+language — until that extended sample has actually been run, any
+cross-language comparison of IDK rate (or, by the same logic, Fabrication
+rate — 8.2) is reported as descriptive only, never as evidence of a
+genuine behavioural difference between languages (see also 10.2's
+Correct-rate-primary framing, 12.3).
+
 ### 8.8 Versioning
 
 The rubric is versioned (`rubric-vX.Y`) independently of the corpus (5.8).
@@ -941,6 +975,14 @@ Base parameters, applied uniformly unless a documented override applies
   template's explicit `max_gen_toks: 2048` and the procedural/free-text
   task families, which left it uncapped — standardised rather than left as
   an accidental per-family difference with no stated reason.
+- **Few-shot count**: 0-shot, uniformly. No custom task definition
+  (`configs/lm_eval_tasks/corpus_*/`, `mgsm_rev2/`) sets a `num_fewshot`
+  key, so lm-evaluation-harness's own default applies everywhere — the
+  same category of silent default the retry-policy bullet above already
+  found once for a different parameter, checked and stated explicitly here
+  (2026-09-16) rather than left implicit a second time. Consistent with
+  every task's own `doc_to_text` template, which renders a single question
+  and no worked exemplars.
 
 **Run Parameter Overrides**
 
@@ -1065,6 +1107,19 @@ where applicable, the overlay categories (8.3), reported per condition
 substrate every RQ-specific analysis below draws from — one definition,
 reused everywhere, rather than each RQ inventing its own summary shape.
 
+**Comparison hierarchy across languages (stated explicitly here,
+2026-09-16).** Correct-rate is the primary cross-language comparison
+throughout Section 10 — it is assigned by the mechanical, high-confidence
+test in 8.4 step 3, and its per-language matching logic (`scoring/
+matching.py`) is unit-tested directly. IDK-rate and Fabrication-rate
+comparisons across languages are secondary: both depend on the
+per-language keyword/heuristic lists in 8.6/A.3, whose coverage is not
+verified equal across languages (12.3's sensitivity-gap finding). A
+cross-language difference in IDK or Fabrication rate is reported as
+descriptive only, and never used on its own to support a confirmatory
+claim, until the per-language false-negative audit described in 8.7 has
+actually been run.
+
 ### 10.3 Per-RQ Analysis Method
 
 | RQ | Comparison | Test | Effect size / threshold | Status |
@@ -1095,6 +1150,20 @@ the same primary category. This operationalises the "reliability score"
 the original paper's limitations section wanted but never built, rather
 than silently averaging repeated runs together.
 
+**Replication-collapsing rule for every other RQ (stated explicitly here,
+2026-09-16 — previously only implemented in code, not pre-registered).**
+Before any paired or grouped test in 10.3 runs, an item's 3 replicates are
+collapsed to one outcome via majority vote (2-of-3 agreement; the 100%
+agreement actually observed in the pilot's first run makes this rarely a
+live tie-break, but the rule is fixed regardless of how often it bites).
+This is the only correct choice of the three available: averaging discards
+the categorical outcome the tests need, and treating all 3n replicate rows
+as independent paired observations would inflate the paired test's own
+sample size with correlated, non-independent data from the same item —
+exactly the kind of pseudo-replication 5.1's coverage-not-volume
+discipline exists to avoid elsewhere in this design. Majority vote is
+applied identically for RQ1, RQ2, RQ6 and RQ7's primary comparisons.
+
 ### 10.5 Statistical Approach and Multiple-Comparison Handling
 
 Exact/non-parametric methods (McNemar's exact test, Cochran's Q,
@@ -1118,6 +1187,46 @@ other combination is reported descriptively as secondary/exploratory,
 clearly labelled as such, and is never used on its own to support a
 confirmatory
 claim.
+
+**Family definition, per model (stated explicitly here, 2026-09-16 —
+previously only implemented in `analysis/cli.py`, not pre-registered).**
+Because 10.2 already reports every model separately rather than pooling
+them, the Holm-Bonferroni family above is one set of up to four tests —
+RQ1, RQ2, RQ6, RQ7's primary comparisons — corrected together *within
+each model*, not across the full model x RQ grid. This is a deliberate
+choice, not an oversight: RQ6's own hypothesis (H6, 4.2) is explicitly
+per-model ("the size of that drop will vary by model"), and a single
+pooled test across models would contradict that framing by treating a
+per-model question as if it had one shared answer. The cost of this
+choice is stated plainly: family-wise error is controlled at 5% *per
+model*, not across all seven models' confirmatory tests taken together,
+so a cross-model claim ("this effect is unusually strong in model X") is
+read descriptively, the same as any other secondary comparison, never as
+its own Holm-corrected confirmatory result.
+
+**No pooling across corpus versions (stated explicitly here, 2026-09-16 —
+previously only an implication of 5.7/5.8, not a rule in this section).**
+A confirmatory analysis for a given RQ draws every one of its rows from a
+single corpus version's run. Responses collected against an earlier
+version are never combined with a later version's responses for the same
+test, even for an item that is byte-identical and carried forward
+unchanged (5.8) — a later corpus version re-running that item is required
+before its response counts toward a confirmatory result measured against
+that version.
+
+**Translation-review scope (stated explicitly here, 2026-09-16).** Every
+Set B/C non-English translation has been reviewed by exactly one person —
+the study owner (11.4) — who is not represented as a native speaker of
+Swahili or Bengali anywhere in this document. This is the same translation
+-fidelity risk the original review that motivated this whole project
+identified (3.2), now applied to this project's own hand-authored content
+rather than the predecessor's. Until an independent native-speaker audit
+of a sampled subset has actually been run, RQ2 and RQ3 results for
+Swahili and Bengali specifically are reported descriptively, not as
+confirmatory findings on a par with German (this pilot's primary
+language, 10.5) or English — the McNemar/Clopper-Pearson output is still
+computed and shown, but read as provisional pending that audit, not
+withheld.
 
 ### 10.6 RQ5 Risk-Threshold Framework
 
@@ -1329,6 +1438,15 @@ confidently-assigned categories. The periodic manual/LLM-judge audit
 samples specifically from Heuristic-Guidance-tagged responses; the tier
 makes the limitation reportable, it does not eliminate it.
 
+A related, distinct gap (added 2026-09-16, 8.7): sampling only from
+Heuristic-Guidance-tagged responses cannot detect an IDK-detector *false
+negative* — a response that should have triggered a marker (8.6, A.3) but
+didn't is tagged High-Confidence, not Heuristic-Guidance, and so is never
+sampled by the audit as originally specified. 8.7 now also specifies a
+per-language random sample from non-IDK-tagged responses to estimate
+this. Until that sample has been run, cross-language IDK/Fabrication-rate
+comparisons stay descriptive (10.2).
+
 ### 12.4 Source-Language Asymmetry
 
 Every vetted Set A/E source (5.4) is originally authored in US English,
@@ -1370,16 +1488,42 @@ first real run against this task, not a prerequisite for treating the
 scaffolding as done — and is tracked as ordinary pre-run verification, not
 as an open engineering gap.
 
-### 12.9 MGSM-Rev2 Share-Alike Legal Sign-Off (Resolved 2026-09-11)
+### 12.9 MGSM-Rev2 Share-Alike Compliance (corrected 2026-09-16; originally recorded, incorrectly, as "Resolved 2026-09-11")
 
 The Source Register (5.4) flagged MGSM-Rev2's CC BY-SA 4.0 share-alike
 obligation as requiring sign-off before any Set E or Set F derivative is
-generated from it. The study owner has determined (2026-09-11) that this
-project's own open publication under CC BY 4.0 (Data Management Plan,
-Section 5) satisfies that obligation; no separate CC BY-SA 4.0 carve-out
-is applied to MGSM-Rev2-derived items. As with every licence reading in
-this document, this is the study owner's own determination, not
-independent legal advice (12.7).
+generated from it. This section previously recorded that the study
+owner's determination — that this project's own CC BY 4.0 publication
+(Data Management Plan, Section 5) satisfies that obligation — was
+sufficient, with no separate CC BY-SA 4.0 carve-out applied. **That
+determination does not hold under a standard reading of CC BY-SA 4.0
+§3(b):** ShareAlike compatibility runs one direction only — BY-SA-licensed
+material may be incorporated into a BY-SA-or-later work, but an adaptation
+of BY-SA material must itself carry BY-SA 4.0, a later version, or a
+licence on Creative Commons' own published Compatible Licenses list; plain
+CC BY is not on that list. Publishing the rest of the project under CC BY
+does not discharge MGSM-Rev2's obligation for its own derivatives. As with
+every licence reading in this document, this is a technical reading for
+research-planning purposes, not independent legal advice (12.7) — but it
+is the correct default reading absent one, and the previous text asserted
+the opposite.
+
+Practical exposure, checked 2026-09-16: every current Set E and Set F row
+derives from Set A's *knowledge* domain (MMLU-ProX, MIT-licensed, no
+share-alike obligation) — `language_variant_of` for every Set E/F row
+traces to an `A-KNOW-*` item, none to an `A-PROC-*` (MGSM-Rev2-sourced)
+item. So no existing corpus row is actually out of compliance today. The
+live gap is the vendored MGSM-Rev2 TSVs themselves
+(`configs/lm_eval_tasks/mgsm_rev2/data/`), redistributed verbatim with no
+BY-SA notice, attribution, or changes-indication anywhere in that
+directory — required by BY-SA regardless of whether any derivative is
+ever built from them. Corrective action, not yet taken: (1) add a
+NOTICE/README to that directory carrying CC BY-SA 4.0, attribution to
+Google Research, and an indication of changes (temp/format only — no
+content alteration); (2) if a Set E or Set F item is ever built from Set
+A's procedural (MGSM-Rev2-sourced) domain, that specific item's
+redistribution must carry CC BY-SA 4.0 explicitly, not the project's
+general CC BY 4.0 default.
 
 ### 12.10 llama.cpp Containerisation and GPU Passthrough (Resolved 2026-09-12); vLLM Still Not Built
 
@@ -1491,7 +1635,6 @@ Dictionary where the Style Manual itself defers to them.
 | defense | defence | -se/-ce |
 | traveled | travelled | single/double consonant |
 | aluminum | aluminium | spelling |
-| tire | tyre | spelling |
 | math | maths | abbreviation |
 | gray | grey | spelling |
 | humor | humour | -or/-our |
@@ -1505,7 +1648,6 @@ Dictionary where the Style Manual itself defers to them.
 | vapor | vapour | -or/-our |
 | vigor | vigour | -or/-our |
 | theater | theatre | -er/-re |
-| meter | metre | -er/-re |
 | liter | litre | -er/-re |
 | fiber | fibre | -er/-re |
 | offense | offence | -se/-ce |
@@ -1525,6 +1667,39 @@ against: "program"/"programme" (UK keeps "program" for computer software,
 "check"/"cheque" and "curb"/"kerb" (only one specific sense of the US
 word converts; the other senses stay identical). These stay excluded from
 blind substitution the same way "public school" does, not silently added.
+
+**Removed 2026-09-16 (correctness fix, not an expansion): `tire`→`tyre`
+and `meter`→`metre`.** Both had been applied as blind substitutions since
+`v0.1`, in violation of 9.4.2's own context-dependence rule — `tire` is
+also a verb ("to tire of something"), unaffected by the noun-only
+UK/AU spelling change, and `meter` is also a measuring device (a glucose
+meter, a parking meter), which UK/AU English keeps as "meter" even where
+the unit of length becomes "metre." Checked against the actual corpus,
+2026-09-16: no existing Set F triplet (21 items) contains either
+converted form, so this was a latent defect in the governed artefact
+itself, not a corrupted item — moved here, alongside "public school," for
+case-by-case exclusion rather than silently left in the active table for
+a future expansion to trip over.
+
+**Added 2026-09-16 — a new category, `-yze/-yse`: `analyze`→`analyse`,
+`catalyze`→`catalyse`, `paralyze`→`paralyse` (and their `-d`/`-ing` forms
+for `analyze`).** Found via a spot-check of the existing 21 Set F items
+against these style guides (m3's native-reader check, done as a partial
+self-review rather than by an independent native reader): `F-KNOW-10`'s
+UK/AU variants both still read "...added to **catalyze** the formation of
+fibrin" — an unconverted US spelling sitting in the same option as a
+correctly-converted "colour," left that way because the existing
+mechanism's `-ize/-ise` handling only matches the literal substring
+"ize," and "catalyze" is spelled with "yze," not "ize," so it was never
+matched at all. Left uncorrected in `corpus/v0.3/set_f.csv` itself — that
+file is exactly what the pilot run in progress at time of writing is
+using, and 5.8's expand-don't-edit discipline means it stays as published,
+known-defective, rather than silently patched after being measured
+against. Disclosed here as a known `v0.3` erratum — **corrected in
+`corpus/v0.4/set_f.csv`** (built 2026-09-16 for the unrelated purpose of
+expanding Set E, 5.8), since `v0.4` had not yet been used for any run at
+the time the fix was made. The new category is added to the active
+tables now so no future Set F build reproduces the same gap.
 
 **US to Australian**
 
@@ -1546,7 +1721,6 @@ blind substitution the same way "public school" does, not silently added.
 | vapor | vapour | -or/-our | Follows UK |
 | vigor | vigour | -or/-our | Follows UK |
 | theater | theatre | -er/-re | Follows UK |
-| meter | metre | -er/-re | Follows UK |
 | liter | litre | -er/-re | Follows UK |
 | fiber | fibre | -er/-re | Follows UK |
 | offense | offence | -se/-ce | Follows UK |
@@ -1563,8 +1737,10 @@ Context-dependent items excluded from blind substitution (9.4.2): "public
 school" (US: state-funded; UK, traditionally: fee-paying independent
 school); "program"/"programme", "practice"/"practise",
 "license"/"licence", "check"/"cheque", "curb"/"kerb" (added 2026-09-15,
-same reasoning — see above) — all flagged for case-by-case exclusion, not
-correction, matching the worked bad example already given in 9.4.2.
+same reasoning — see above); "tire"/"tyre" and "meter"/"metre" (removed
+from the active tables 2026-09-16 — see above) — all flagged for
+case-by-case exclusion, not correction, matching the worked bad example
+already given in 9.4.2.
 
 ### A.3 Language-Aware IDK/Fabrication Markers (8.6)
 
@@ -1596,6 +1772,47 @@ owner on 2026-09-09 — `review_status` in that file has been updated from
 | "What is the powerhouse of the cell?" (gold: mitochondria) | "What is the energy-generating structure of the cell?" | Near-synonym swap | Rejected at human review — logged per 9.4.1's bad example, not usable as a Set E item |
 | `A-KNOW-01-en` (heart's metabolic supply; gold: coronary blood supply) | `E-KNOW-01`: "The cardiac muscle itself needs a constant supply of oxygen and nutrients... What circulatory mechanism actually meets this need?" | Concept restatement — reframes the mechanism rather than rewording "supplied" | Accepted — study owner, 2026-09-09 |
 | `A-KNOW-02-en` (evidence of impulse transmission in plants; gold: Mimosa pudica touch response) | `E-KNOW-02`: "Plants have no nervous system, yet some show rapid, coordinated responses to a stimulus. What observation is usually cited as evidence..." | Concept restatement — asks for the evidentiary logic rather than rewording "transmission of impulses" | Accepted — study owner, 2026-09-09 |
+
+**corpus-v0.3 (added 2026-09-16 — these 10 rows existed in
+`corpus/v0.3/set_e.csv` since 2026-09-15 but were never logged here,
+against 5.5's own requirement; closed as a documentation gap, not a
+re-drafting).** Generator: Claude (Anthropic), a general-purpose LLM
+distinct from every model under test, per 9.4.1's method — the same
+assistant used for the v0.1 pair above. The specific model snapshot used
+at drafting time (2026-09-15) was not separately pinned in the original
+record; noted here as a gap in provenance precision, not corrected
+retroactively, and worth capturing explicitly for any future perturbation
+batch. Each German row is a native German perturbation grounded in the
+corresponding `A-KNOW-*-de` item's own terminology, not a machine
+translation of the English perturbation (corpus-v0.3 README). All 10
+reviewed and accepted by the study owner, 2026-09-15.
+
+| Source item | Perturbed item | Change type | Review outcome |
+|---|---|---|---|
+| `A-KNOW-04-en`/`A-KNOW-04-de` (stabilising-selection scenario; gold: B) | `E-KNOW-05-en`/`E-KNOW-05-de`: "In a population, individuals with extreme trait values... become less common... relative to individuals near the average. What type of natural selection produces this pattern?" | Concept restatement — names the process via its outcome pattern rather than rewording the source MCQ's phrasing | Accepted — study owner, 2026-09-15 |
+| `A-KNOW-05-en`/`A-KNOW-05-de` (extinction-vortex vulnerability; gold: A) | `E-KNOW-06-en`/`E-KNOW-06-de`: "What two closely related genetic problems make small populations especially prone to a self-reinforcing decline toward extinction?" | Concept restatement — asks for the two named mechanisms directly rather than rewording "extinction vortex" | Accepted — study owner, 2026-09-15 |
+| `A-KNOW-07-en`/`A-KNOW-07-de` (NAD+ regeneration under anaerobic conditions; gold: B) | `E-KNOW-07-en`/`E-KNOW-07-de`: "Which metabolic pathway allows glycolysis to keep producing ATP under anaerobic conditions, by regenerating the NAD+ that glycolysis itself consumes?" | Concept restatement — asks for the pathway by its functional role rather than rewording "this process" | Accepted — study owner, 2026-09-15 |
+| `A-KNOW-08-en`/`A-KNOW-08-de` (smallest unit natural selection can change; gold: I) | `E-KNOW-08-en`/`E-KNOW-08-de`: "Evolutionary change happens through shifts in the genetic makeup of a population, not within any single organism... What is the actual unit that changes when natural selection acts?" | Concept restatement — reframes via the population-vs-individual distinction rather than rewording "smallest unit" | Accepted — study owner, 2026-09-15 |
+| `A-KNOW-16-en`/`A-KNOW-16-de` (stimulus-intensity encoding; gold: F) | `E-KNOW-09-en`/`E-KNOW-09-de`: "How does the nervous system encode how strong a sensory stimulus is, given that individual action potentials are all the same size?" | Concept restatement — poses the coding-mechanism question directly rather than rewording "varies with" | Accepted — study owner, 2026-09-15 |
+
+**corpus-v0.4 (added 2026-09-16) — 14 new rows, 7 facts x en/de,
+targeting RQ6-DE's power floor (10.5).** Generator: Claude (Anthropic),
+same method and same assistant as every prior batch. Each source item was
+previously unused by any existing Set E or Set F item, keeping the two
+sets' signal on distinct underlying facts. **Not yet reviewed — logged as
+drafted, `review_status: candidate`, per 9.4.1's mandatory-human-review
+requirement. Do not treat these as usable evidence until this table is
+updated to show a reviewer and date.**
+
+| Source item | Perturbed item | Change type | Review outcome |
+|---|---|---|---|
+| `A-KNOW-06-en`/`A-KNOW-06-de` (sister-chromatid separation timing in meiosis; gold: C, "sister chromatids separate during meiosis I" is the false statement) | `E-KNOW-10-en`/`E-KNOW-10-de`: "...At which division do sister chromatids themselves actually separate?" | Concept restatement — converts a negation-MCQ ("which is NOT true") into a direct positive question about the same underlying fact | Candidate — drafted 2026-09-16, awaiting review |
+| `A-KNOW-09-en`/`A-KNOW-09-de` (Le Chatelier's principle at equilibrium; gold: A, "removing some of reactant C") | `E-KNOW-11-en`/`E-KNOW-11-de`: "...what change to the reaction mixture would push it to produce more of product C?" | Concept restatement — same scenario and principle, reworded from an MCQ-option-selection format to an open question | Candidate — drafted 2026-09-16, awaiting review |
+| `A-KNOW-12-en`/`A-KNOW-12-de` (oblique cleavage terminology; gold: H) | `E-KNOW-12-en`/`E-KNOW-12-de`: "...What is this pattern of cleavage called?" | Concept restatement — describes the geometric relationship (angle to the polar axis) rather than naming it, then asks for the term | Candidate — drafted 2026-09-16, awaiting review |
+| `A-KNOW-13-en`/`A-KNOW-13-de` (acetylcholine vs. intracellular second messengers; gold: C, acetylcholine is the exception) | `E-KNOW-13-en`/`E-KNOW-13-de`: "...does it act as one of these intracellular relay molecules, or does it act at the surface receptor itself?" | Concept restatement — converts a negation-MCQ into a direct either/or question about the same distinction | Candidate — drafted 2026-09-16, awaiting review |
+| `A-KNOW-14-en`/`A-KNOW-14-de` (fungi excluded from photosynthesis; gold: A, photosynthesis is the exception) | `E-KNOW-14-en`/`E-KNOW-14-de`: "...why can't fungi make their own glucose directly from sunlight and carbon dioxide the way plants do?" | Concept restatement — converts a negation-MCQ into a direct "why not" question about the same underlying fact | Candidate — drafted 2026-09-16, awaiting review |
+| `A-KNOW-17-en`/`A-KNOW-17-de` (homeotic-gene mutation and segment identity; gold: H, "transformation of one segment into another") | `E-KNOW-15-en`/`E-KNOW-15-de`: "...a segment doesn't simply disappear or duplicate — instead, what actually happens to it?" | Concept restatement — states what the defect is not, then asks what it actually is, rather than rewording "transformation" | Candidate — drafted 2026-09-16, awaiting review |
+| `A-KNOW-18-en`/`A-KNOW-18-de` (xylem's water-conducting cell types; gold: B, "tracheids and vessel elements") | `E-KNOW-16-en`/`E-KNOW-16-de`: "...What are the two specialised, non-living conducting cell types that make up this tissue?" | Concept restatement — describes the function and property (non-living, conducting) rather than rewording "xylem plant cell types" | Candidate — drafted 2026-09-16, awaiting review |
 
 ### A.5 Versioning
 

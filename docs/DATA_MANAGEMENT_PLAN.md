@@ -85,10 +85,18 @@ documentation and data, MIT for code (repository root `LICENSE`).
 
 MGSM-Rev2's CC BY-SA 4.0 share-alike obligation (Source Register,
 Protocol 5.4) required sign-off before any Set E or Set F derivative
-built from it could be generated or released. The study owner has
-determined that this project's own open publication under CC BY 4.0
-satisfies that obligation; no separate CC BY-SA 4.0 carve-out is applied
-to MGSM-Rev2-derived items (Protocol 12.9).
+built from it could be generated or released. **Corrected 2026-09-16
+(Protocol 12.9):** this project's general CC BY 4.0 publication does not
+discharge that obligation — BY-SA 4.0's ShareAlike clause requires an
+adaptation to itself carry BY-SA 4.0, a later version, or a Creative
+Commons-listed Compatible License, and plain CC BY does not qualify. No
+current corpus item is actually affected (every existing Set E/F row
+derives from the MIT-licensed MMLU-ProX side of Set A, not MGSM-Rev2), but
+the vendored MGSM-Rev2 TSVs (`configs/lm_eval_tasks/mgsm_rev2/data/`)
+still require their own BY-SA 4.0 notice and attribution, independent of
+whether any derivative is built from them, and any future MGSM-Rev2-derived
+Set E/F item must carry CC BY-SA 4.0 explicitly rather than the project's
+general CC BY 4.0 default.
 
 Planned release point: alongside eventual publication or public
 write-up, not before. During the pilot the project remains private.

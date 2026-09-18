@@ -141,7 +141,12 @@ design can produce.
 correspondingly. Full per-model intervals are in the regenerated report
 (Section 11).
 
-## 7. RQ6 — Contamination check (Set A vs Set E)
+## 7. RQ6 — Surface-form sensitivity check (Set A vs Set E)
+
+(Renamed 2026-09-16 from "Contamination check" — a Correct-rate drop on a
+paraphrased twin is a confounded signal for shallow pattern-matching, not
+direct evidence of train-test contamination; see Protocol 2's own RQ6
+wording.)
 
 **Not available for any model.** Set E currently has only 2 rows total,
 both English (`corpus/v0.2/set_e.csv`) — there is no German (primary
@@ -195,6 +200,11 @@ primary comparison available (RQ6 unavailable for every model, Section
 4. This is one pilot run. Per 5.1/5.8, this corpus and model set are a
    starting scale, not a ceiling — every number above should be read as
    "what a first small run found," not a final result.
+5. **Scope: sub-4B models only (added 2026-09-16).** Every model in this
+   report is edge or small tier per Protocol 7.1's definition (under
+   ~4B parameters). Nothing above generalises to mid-size or frontier
+   models — restated here explicitly, since this caveat was previously
+   implicit in the Model Register rather than stated in this report.
 
 ## 11. Data Provenance and Reproducing This Report
 

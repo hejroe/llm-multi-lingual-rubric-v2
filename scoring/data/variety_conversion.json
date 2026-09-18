@@ -7,7 +7,6 @@
     "defense": "defence",
     "traveled": "travelled",
     "aluminum": "aluminium",
-    "tire": "tyre",
     "math": "maths",
     "gray": "grey",
     "humor": "humour",
@@ -21,13 +20,19 @@
     "vapor": "vapour",
     "vigor": "vigour",
     "theater": "theatre",
-    "meter": "metre",
     "liter": "litre",
     "fiber": "fibre",
     "offense": "offence",
     "jewelry": "jewellery",
     "mold": "mould",
-    "plow": "plough"
+    "plow": "plough",
+    "analyze": "analyse",
+    "analyzed": "analysed",
+    "analyzing": "analysing",
+    "catalyze": "catalyse",
+    "catalyzed": "catalysed",
+    "paralyze": "paralyse",
+    "paralyzed": "paralysed"
   },
   "us_to_au": {
     "color": "colour",
@@ -45,12 +50,18 @@
     "vapor": "vapour",
     "vigor": "vigour",
     "theater": "theatre",
-    "meter": "metre",
     "liter": "litre",
     "fiber": "fibre",
     "offense": "offence",
     "jewelry": "jewellery",
     "mold": "mould",
-    "plow": "plough"
+    "plow": "plough",
+    "analyze": "analyse",
+    "analyzed": "analysed",
+    "analyzing": "analysing",
+    "catalyze": "catalyse",
+    "catalyzed": "catalysed",
+    "paralyze": "paralyse",
+    "paralyzed": "paralysed"
   }
 }

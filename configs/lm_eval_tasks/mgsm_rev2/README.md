@@ -38,6 +38,13 @@ scaffolding step), and Swahili/English specifically (same TSV format and
 mechanism as the two verified languages, so expected to behave the same,
 but not independently re-tested here).
 
+## Licence
+
+The vendored TSVs in `data/` are CC BY-SA 4.0 (Google Research), not this
+project's general CC BY 4.0 — see `data/NOTICE.md` for the required
+attribution and indication of changes (added 2026-09-16, correcting a
+previous gap — `docs/STUDY_PROTOCOL.md` 12.9).
+
 ## Task/prompt conventions
 
 Deliberately mirrors the stock `mgsm_direct_*` tasks' exact prompt

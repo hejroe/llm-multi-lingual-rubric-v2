@@ -1,7 +1,7 @@
 task: corpus_a_procedural_de
 include: _common_procedural_yaml
 dataset_kwargs:
-  data_files: /corpus/v0.3/set_a.csv
+  data_files: /corpus/v0.4/set_a.csv
 process_docs: !function utils.filter_procedural_de
 doc_to_text: '{{"Frage: "+question_text+"\nAntwort:"}}'
 generation_kwargs:

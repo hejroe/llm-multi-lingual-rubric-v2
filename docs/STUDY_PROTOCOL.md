@@ -1,8 +1,8 @@
 # Study Protocol
 
-**Version:** 0.29 (DRAFT — not frozen; section 1 pending, deferred by request)
+**Version:** 0.30 (DRAFT — not frozen; section 1 pending, deferred by request)
 **Status:** DRAFT
-**Last updated:** 2026-09-16
+**Last updated:** 2026-09-19
 
 Amendments after freeze are logged in Section 13.
 
@@ -495,7 +495,40 @@ existing 21 Set F triplets was also completed by the study owner on the
 same date, closing the sensitivity-validation gap Appendix A.2 had left
 open (beyond the mechanical `catalyze` fix already applied above).
 
----
+**corpus-v0.5 exists** (`corpus/v0.5/`, built 2026-09-19): expands Set A
+and Set F, directly motivated by RQ7's own power problem — several
+conditions in the corpus-v0.3 pilot run sat right on the edge of
+significance (Cochran's Q as low as 0.0498 before Holm-Bonferroni
+correction pushed it back over the threshold), consistent with a knife-
+edge power problem at 21 triplets, not a settled null result. Checked
+before building anything: only 2 of the 18 not-yet-used Set A knowledge
+items contained a word from Appendix A.2's conversion list, and one of
+those was already claimed by `v0.4`'s Set E (keeping the two sets'
+signal on distinct facts, 5.8) — nowhere near enough to matter, so this
+release sources fresh MMLU-ProX items rather than stretching the
+existing pool. Set B, Set C and Set E are carried forward unchanged.
+
+- **Set A**: grown from 39 to 69 knowledge-domain items per language (276
+  new rows across en/de/sw/bn), sourced from MMLU-ProX's **chemistry**
+  category (HF datasets-server, offsets 3400-3799) rather than biology —
+  a deliberate scope decision, not an oversight: the biology category was
+  found exhausted at this offset range (already scanned as far as v0.3's
+  own build went), and the Source Register's MMLU-ProX vetting (5.4) was
+  never scoped to one category, only to the dataset as a whole. Cross-
+  language alignment verified programmatically the same way as every
+  previous Set A batch (`question_id`, `answer`, `answer_index`, `src`
+  match across all four language configs at every row position checked,
+  0 misaligned of 400 rows scanned) before any row was written.
+- **Set F**: grown from 21 to 51 US/UK/AU triplets (60 new rows), derived
+  from the 30 new Set A items found to contain a convertible word — 24
+  containing something other than "liter" (kept all of them, for word
+  diversity) plus 6 "liter"-only items (a spread, not a block, to avoid
+  one word dominating the set). No new conversion-list entries were
+  needed; every word used was already in Appendix A.2.
+
+Procedural-domain Set A and the German/Swahili/Bengali translation-review
+gap (Set B/C, 10.5) are both untouched by this release — RQ7's power
+problem, specifically, is what this expansion targets.
 
 ## 6. Languages
 

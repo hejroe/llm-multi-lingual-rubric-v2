@@ -228,7 +228,7 @@ end-to-end against a live model for the first time.
   since neither the stock MMLU-ProX task nor MGSM-Rev2 actually ran
   against this project's own curated corpus rows otherwise.
 - **The scoring rubric (Section 8)** is implemented as tested code
-  (`scoring/`, rubric-v0.3), not just prose — 129 tests (`python -m
+  (`scoring/`, rubric-v0.3), not just prose — 133 tests (`python -m
   pytest`), each keyed to a specific worked example from `RUBRIC_CARDS.md`
   or the Protocol itself, or a regression from a real finding below.
 - **The I/O layer** (`scoring/io.py`) joins harness `--log_samples`
@@ -236,8 +236,8 @@ end-to-end against a live model for the first time.
 - **The Section 10 statistical analysis pipeline** (`analysis/`) is
   implemented: McNemar's exact test, Clopper-Pearson intervals, Cochran's
   Q, Holm-Bonferroni correction, the behavioural response profile (10.2),
-  the reliability metric (10.4), and RQ1/RQ2/RQ3/RQ6/RQ7 wired to scored
-  data (RQ4 awaits Set D infrastructure, below).
+  the reliability metric (10.4), and RQ1/RQ2/RQ3/RQ6/RQ7/RQ8 wired to
+  scored data (RQ4 awaits Set D infrastructure, below).
 - **GPU passthrough and Set D's tool-calling path** are verified working
   (Limitations 12.10) — done in a second, dedicated WSL2 distro
   (Ubuntu-24.04) for isolation from other projects sharing this machine.
@@ -272,14 +272,23 @@ from) rather than reporting its true 100% Infrastructure-Failure rate.
 Both are fixed, with regression tests — see git history from
 2026-09-16/18 for detail on each.
 
-**What's still open**: `qwen3_4b_nonreasoning`'s re-run; a planned
-expansion to run every model through both Ollama and llama.cpp, to
-directly measure the backend-choice confound already disclosed in
-Limitations 12.11/12.12 rather than leave it unquantified; and a native-
-speaker audit of the Swahili/Bengali Set B/C translations, without which
-those RQ2/RQ3 legs are read as descriptive only (10.5). `PILOT_RESULTS.md`
-Section 12 still has the original v0.2-era recommended next steps, most
-now superseded by the above.
+**RQ8 added (2026-09-19)**: backend/harness choice — reframed from a
+disclosed confound (Limitations 12.11/12.12) into a genuine research
+question, per this project's commercial-risk-management purpose. Every
+registered model is now scoped to run through both Ollama and llama.cpp
+(full crossing, not a cheaper subset), with its own hypothesis (H8),
+Backend Register restructure (9.2, including a Harness Behavioural
+Constraints Log), and analysis method (10.3) already implemented and
+tested (`analysis/rq_analysis.py`'s `rq8_backend_divergence`) — currently
+reports "skipped" for every model until that crossing run actually
+happens.
+
+**What's still open**: `qwen3_4b_nonreasoning`'s re-run, folded into the
+same next run as the backend-crossing expansion above rather than run
+twice; and a native-speaker audit of the Swahili/Bengali Set B/C
+translations, without which those RQ2/RQ3 legs are read as descriptive
+only (10.5). `PILOT_RESULTS.md` Section 12 still has the original
+v0.2-era recommended next steps, most now superseded by the above.
 
 Corpus/item authoring: `corpus/v0.1/` (2026-09-08) holds the first real
 corpus release across all six item families; `corpus/v0.2/` (2026-09-09)
@@ -292,9 +301,13 @@ Set F, directly motivated by the first full pilot run's own findings
 2026-09-15 (`corpus/v0.3/README.md`'s own "Review status" section has
 the detail). `corpus/v0.4/` (2026-09-16) expands Set E only — German
 items grow from 5 to 12, clearing RQ6's McNemar power floor — reviewed
-and accepted by the study owner, 2026-09-19 (`corpus/v0.4/README.md`'s
-own "Review status" section has the detail), alongside a native-reader
-check of the existing 21 Set F triplets. Each
+and accepted by the study owner, 2026-09-19, alongside a native-reader
+check of the existing 21 Set F triplets. `corpus/v0.5/` (2026-09-19)
+expands Set A and Set F only — 30 new knowledge-domain items (sourced
+from MMLU-ProX's chemistry category, biology having been exhausted at
+this offset range) and 30 new US/UK/AU triplets, bringing RQ7's dataset
+from 21 to 51 triplets after two conditions in the v0.3 pilot run sat
+right on the edge of significance. Each
 version's own README states what's verified and what's a scoping choice
 rather than an oversight. This folder is under local git
 version control (`.gitignore` excludes `results/` at volume) with a clean

@@ -164,7 +164,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--pilot-root", required=True, type=Path, help="e.g. results/pilot"
     )
-    parser.add_argument("--corpus-version", default="v0.3")
+    parser.add_argument("--corpus-version", default="v0.5")
     parser.add_argument("--out", required=True, type=Path)
     parser.add_argument("--no-auto-digest", action="store_true")
     args = parser.parse_args(argv)

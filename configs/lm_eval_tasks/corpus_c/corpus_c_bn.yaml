@@ -1,7 +1,7 @@
 task: corpus_c_bn
 include: _common_yaml
 dataset_kwargs:
-  data_files: /corpus/v0.4/set_c.csv
+  data_files: /corpus/v0.5/set_c.csv
 process_docs: !function utils.filter_bn
 doc_to_text: '{{"প্রশ্ন: "+question_text+"\nAnswer:"}}'
 generation_kwargs:

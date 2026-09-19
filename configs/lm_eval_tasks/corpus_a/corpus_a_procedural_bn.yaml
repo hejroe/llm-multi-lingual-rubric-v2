@@ -1,7 +1,7 @@
 task: corpus_a_procedural_bn
 include: _common_procedural_yaml
 dataset_kwargs:
-  data_files: /corpus/v0.4/set_a.csv
+  data_files: /corpus/v0.5/set_a.csv
 process_docs: !function utils.filter_procedural_bn
 doc_to_text: '{{"প্রশ্ন: "+question_text+"\nAnswer:"}}'
 generation_kwargs:

@@ -7,7 +7,7 @@
 task: corpus_e_de
 dataset_path: csv
 dataset_kwargs:
-  data_files: /corpus/v0.4/set_e.csv
+  data_files: /corpus/v0.5/set_e.csv
 test_split: train
 process_docs: !function utils.filter_de
 output_type: generate_until

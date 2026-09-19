@@ -51,10 +51,12 @@ of 2026-09-11. Running git through the Cowork device bridge can leave a
 stale `.git/index.lock` behind, since the bridge's mounted filesystem
 cannot delete files by default; clearing that lock, or running git from
 a native shell on the host machine instead, resolves it without
-affecting repository integrity. GitHub and GitLab remotes are confirmed
-(Section 5) as the public-release and backup destination (Section 6) —
-local version control alone would otherwise be enough to make every
-run's corpus/rubric/code version reconstructable per the versioning
+affecting repository integrity. A GitHub remote is confirmed (Section 5)
+as the public-release and backup destination (Section 6); a GitLab
+mirror is a stated future intention, not yet set up (corrected
+2026-09-19 — this section and Sections 5/6 previously asserted it existed
+already) — local version control alone would otherwise be enough to make
+every run's corpus/rubric/code version reconstructable per the versioning
 clauses already in the Protocol (5.8, 7.5, 8.8, 9.7); those version
 numbers are not reproducibility guarantees on their own without a
 matching commit to
@@ -102,11 +104,13 @@ Planned release point: alongside eventual publication or public
 write-up, not before. During the pilot the project remains private.
 
 Repository for public release, confirmed by the study owner (2026-09-11):
-GitHub and GitLab, both mirroring the same history. This differs from
-OSF/Zenodo, which additionally offer a versioned deposit with a citable
-DOI — the study owner has confirmed GitHub/GitLab as sufficient for now;
-a DOI-citable deposit remains available later if formal citation is
-needed.
+GitHub (`hejroe/llm-multi-lingual-rubric-v2`), currently the sole live
+remote. A GitLab mirror was intended alongside it but has not actually
+been created (corrected 2026-09-19). This differs from OSF/Zenodo, which
+additionally offer a versioned deposit with a citable DOI — the study
+owner has confirmed GitHub as sufficient for now; a DOI-citable deposit,
+and/or the originally-intended GitLab mirror, remain available later if
+formal citation or a second backup location is needed.
 
 ## 6. Retention, Backup, and Long-Term Preservation
 
@@ -116,8 +120,8 @@ five-year figure follows common institutional research-data-retention
 practice and is stated here as a working assumption, not a rule specific
 to this project.
 
-Backup, confirmed by the study owner (2026-09-11): the GitHub and GitLab
-remotes (Section 5) serve as off-machine backup for corpus, code, and
+Backup, confirmed by the study owner (2026-09-11): the GitHub remote
+(Section 5) serves as off-machine backup for corpus, code, and
 protocol text, alongside the local machine copy. Raw model responses
 (Section 9) are the most expensive artefact to regenerate, since
 regenerating them requires live inference runs, and they do not belong in

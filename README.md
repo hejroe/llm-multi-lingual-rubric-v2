@@ -33,10 +33,14 @@ one file. Read in this order:
    deferred by request).
 2. **[`docs/DATA_MANAGEMENT_PLAN.md`](docs/DATA_MANAGEMENT_PLAN.md)** —
    where the data this study produces lives, for how long, and under what
-   licence. This project is under local git version control with GitHub
-   and GitLab remotes, which serve as both the public-release repository
-   and off-machine backup (DMP Sections 5, 6). The licence (CC BY 4.0 for
-   documentation/data, MIT for code, repository root `LICENSE`) is
+   licence. This project is under local git version control with a GitHub
+   remote (`hejroe/llm-multi-lingual-rubric-v2`), which serves as both the
+   public-release repository and off-machine backup (DMP Sections 5, 6).
+   A GitLab mirror is stated as a future intention there but does not yet
+   exist — corrected 2026-09-19, this README previously claimed it did.
+   The licence (CC BY 4.0 for documentation/data, MIT for code, repository
+   root `LICENSE`, with a CC BY-SA 4.0 carve-out for the vendored
+   MGSM-Rev2 data — `configs/lm_eval_tasks/mgsm_rev2/data/NOTICE.md`) is
    applied.
 3. **[`docs/adr/`](docs/adr/)** — one-page Architecture Decision Records:
    why a specific design choice was made (backend abstraction, statistical
@@ -224,8 +228,9 @@ end-to-end against a live model for the first time.
   since neither the stock MMLU-ProX task nor MGSM-Rev2 actually ran
   against this project's own curated corpus rows otherwise.
 - **The scoring rubric (Section 8)** is implemented as tested code
-  (`scoring/`, rubric-v0.3), not just prose — 50 tests, each keyed to a
-  specific worked example from `RUBRIC_CARDS.md` or the Protocol itself.
+  (`scoring/`, rubric-v0.3), not just prose — 129 tests (`python -m
+  pytest`), each keyed to a specific worked example from `RUBRIC_CARDS.md`
+  or the Protocol itself, or a regression from a real finding below.
 - **The I/O layer** (`scoring/io.py`) joins harness `--log_samples`
   output to the rubric, with 9.6's run-level provenance stamping.
 - **The Section 10 statistical analysis pipeline** (`analysis/`) is
@@ -243,33 +248,38 @@ See `requirements.txt` for the local Python dependencies `scoring/` and
 separate from the `docker/` image, which only runs lm-evaluation-harness
 itself.
 
-**Status, 2026-09-14: the first full pilot run has completed** — all
-seven registered candidate models (nine conditions, counting Qwen3's
-reasoning-mode split, ADR 0010), full corpus-v0.2 scale, 3-way replication
-(Protocol 9.3), 6,156 scored responses. See
-**[`docs/PILOT_RESULTS.md`](docs/PILOT_RESULTS.md)** for the actual
-findings (RQ1-RQ3, RQ6, RQ7, reliability, and Infrastructure-Failure rate,
-per model) and known caveats. Getting there required fixing real
-data-integrity and analysis-design bugs invisible until real multi-model
-data existed — see that document's own Section 10 and the git history
-around 2026-09-13/14 for what was found and fixed (stale duplicate run
-data, Qwen3 provenance, and pooling every model together before this pass
-split the analysis per model, per 10.2's own reporting grain).
+**Status, 2026-09-19: two full pilot runs have completed.** The first
+(2026-09-14, corpus-v0.2, `docs/PILOT_RESULTS.md`) found RQ1 and RQ7
+statistically inconclusive at that scale and directly motivated
+corpus-v0.3's expansion. The second (corpus-v0.3, all nine conditions,
+3-way replication, 15,498 scored responses) has been run and scored, with
+a real result the expansion was built to produce: **RQ1 is now
+significant for 3 of 9 conditions** (gemma3n:e2b, llama3.2:1b, phi4-mini)
+— not achievable at all under v0.2's scale. RQ2 remains the strongest,
+most reproducible signal (significant in 6/9 conditions). One condition,
+`qwen3_4b_nonreasoning`, hit a genuine external blocker — a llama.cpp
+chat-parser bug on the machine that ran this pass (Limitations 12.12) —
+and is scheduled to be re-run on different infrastructure rather than
+left unresolved. A formal write-up equivalent to `PILOT_RESULTS.md` for
+this run has not yet been published as of this commit.
 
-**What's still open**: the corpus's current scale leaves RQ1 and
-especially RQ7 statistically inconclusive (n=3 and n=1 pairs
-respectively — Limitations 12.2), and RQ6 has no German (primary
-language) Set E data yet to report against at all. `PILOT_RESULTS.md`
-Section 12 has the full list of recommended next steps. A known,
-documented gap (`scoring/io.py`'s module docstring): stock
-lm-eval-harness doesn't surface a per-item error/timeout signal into
-`--log_samples` the way 8.2/9.3 assume, so Infrastructure-Failure tagging
-can currently only catch an empty response, not an explicit
-harness-reported fault (this is exactly what `scripts/robust_run.py`
-reconciles against each task's expected item set instead) — this pilot's
-empty-response rate turned out to be a genuine, substantial finding in
-its own right (`PILOT_RESULTS.md` Section 3), not just a fallback
-mechanism.
+Getting real numbers out of this run surfaced two more scoring-pipeline
+bugs invisible until it existed: `scoring/matching.py` never matched a
+Bengali-script numeral against a Latin-digit gold answer, and
+`scoring/score_pilot_run.py` was silently dropping a condition that
+failed completely (no aggregated `results_*.json` to read provenance
+from) rather than reporting its true 100% Infrastructure-Failure rate.
+Both are fixed, with regression tests — see git history from
+2026-09-16/18 for detail on each.
+
+**What's still open**: `qwen3_4b_nonreasoning`'s re-run; a planned
+expansion to run every model through both Ollama and llama.cpp, to
+directly measure the backend-choice confound already disclosed in
+Limitations 12.11/12.12 rather than leave it unquantified; and a native-
+speaker audit of the Swahili/Bengali Set B/C translations, without which
+those RQ2/RQ3 legs are read as descriptive only (10.5). `PILOT_RESULTS.md`
+Section 12 still has the original v0.2-era recommended next steps, most
+now superseded by the above.
 
 Corpus/item authoring: `corpus/v0.1/` (2026-09-08) holds the first real
 corpus release across all six item families; `corpus/v0.2/` (2026-09-09)
@@ -280,11 +290,14 @@ German, Swahili and Bengali (translations reviewed by the study owner,
 Set F, directly motivated by the first full pilot run's own findings
 (`docs/PILOT_RESULTS.md`); reviewed and signed off by the study owner,
 2026-09-15 (`corpus/v0.3/README.md`'s own "Review status" section has
-the detail). Each
+the detail). `corpus/v0.4/` (2026-09-16) expands Set E only — German
+items grow from 5 to 12, clearing RQ6's McNemar power floor — and is
+**not yet reviewed** (`review_status: candidate` throughout the new
+rows), not usable as confirmatory evidence until it is. Each
 version's own README states what's verified and what's a scoping choice
 rather than an oversight. This folder is under local git
 version control (`.gitignore` excludes `results/` at volume) with a clean
-working tree, and GitHub/GitLab remotes for public release and backup
+working tree, and a GitHub remote for public release and backup
 (`DATA_MANAGEMENT_PLAN.md` Sections 3, 5, 6). Known open items are
 tracked where they arise rather than repeated here: see
 `STUDY_PROTOCOL.md` Section 12 (Limitations) and `DATA_MANAGEMENT_PLAN.md`

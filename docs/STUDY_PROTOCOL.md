@@ -1584,6 +1584,44 @@ correcting after the fact here. Any RQ1/RQ2/RQ3/RQ6/RQ7 comparison
 involving Qwen3 should be read with this caveat attached, not as directly
 comparable to same-RQ results for every other model.
 
+### 12.12 llama.cpp Chat-Parser Failure, `qwen3_4b_nonreasoning` (identified 2026-09-18)
+
+During the corpus-v0.3 pilot run, `qwen3_4b_nonreasoning` failed
+completely on every one of 3 replicates: `llama-server` returned
+`500: "The model produced output that does not match the expected
+peg-native format"` on ordinary, unremarkable model output (confirmed on
+two unrelated corpus items, one with a free-form multi-sentence preamble
+ahead of the final answer despite `enable_thinking:false` being set — the
+response *structure*, not the item content, appears to be what breaks the
+parser). `--skip-chat-parsing` did not avoid it; `--no-jinja` did, but
+also disables `chat_template_kwargs`, silently defeating ADR 0010's
+reasoning-mode control — not an acceptable trade. Root-caused to
+`llama-server`'s native chat-response parser (`common_chat_peg_parse`,
+engaged by `--jinja`), not to a corpus or pipeline defect — full repro
+steps are preserved in the run's own handover document
+(`results/pilot/20260915T195159Z/`, machine-local, not git-tracked per
+the results/* exclusion, 5.7/6 of the Data Management Plan).
+
+**Decision:** rather than chasing this llama.cpp-build-specific bug
+further, this one condition is re-run against corpus-v0.3 on the
+Windows/WSL2/NVIDIA pipeline (9.2), which uses a different llama.cpp
+container image and is confirmed not to hit this failure — cheaper and
+more certain than an unverified in-prompt `/no_think` toggle or a
+different llama.cpp version, and it closes the gap with real data rather
+than leaving it unresolved. This adds one more documented instance of the
+same backend-divergence category already disclosed in 12.11 (this one
+condition now comes from a *third* distinct llama.cpp build — Windows/
+CUDA — rather than the Mac/Metal build the other 8 conditions in this
+same pilot run used), not a new category of limitation.
+
+**Deferred action, not yet done:** report this bug upstream to
+`ggml-org/llama.cpp`, with the two repro cases and the exact flags
+(`--jinja` + Qwen3 chat template + `enable_thinking:false` +
+free-form non-English preamble text) already written up in the handover
+document referenced above. Logged here specifically so the repro detail
+has a git-tracked anchor independent of the machine-local results/
+directory it currently also lives in.
+
 ---
 
 ## 13. Amendment Log

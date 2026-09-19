@@ -11,11 +11,11 @@ Amendments after freeze are logged in Section 13.
 ## 2. Research Questions
 
 This section sets out the questions the pilot is designed to answer. RQ1,
-RQ2, RQ3, RQ6 and RQ7 are confirmatory (tested against pre-specified
+RQ2, RQ3, RQ6, RQ7 and RQ8 are confirmatory (tested against pre-specified
 criteria, per the amendment rules in Section 13); RQ4 is exploratory; RQ5 is
 a framing question that interprets the others against a named
 professional-use context rather than testing a hypothesis of its own.
-Results across all seven are reported per model using a common method set
+Results across all eight are reported per model using a common method set
 out in Section 10.
 
 RQ1 (confirmatory). For culturally/linguistically neutral factual and
@@ -56,6 +56,24 @@ RQ7 (confirmatory). Does model performance differ systematically between
 major regional varieties of the same language (US, UK, and Australian
 English) in spelling, units, terminology and idiom, indicating training-data
 representation bias toward one variety rather than genuine task difficulty?
+
+RQ8 (confirmatory, added 2026-09-19). For a fixed model answering a fixed
+corpus item under identical prompt and generation parameters, does the
+choice of serving harness/backend (e.g. Ollama vs. llama.cpp) change the
+model's measured behaviour — its primary response category (8.2) or its
+Infrastructure-Failure rate (10.7) — independent of any of RQ1-RQ7's own
+manipulations? This treats backend/harness choice as a genuine deployment
+variable in its own right, not only a methodological confound to disclose
+(as Limitations 12.11/12.12 originally did): an AI user deploying a given
+model makes a real choice of serving stack, and a harness's own design
+decisions — which parameters it exposes, how it parses model output — can
+constrain or change what behaviour that choice actually produces. Motivated
+directly by two pieces of evidence this pilot already produced rather than
+a hypothetical concern: a harness-specific parser crash that blocked one
+model/condition entirely (12.12), and a measured Infrastructure-Failure
+rate difference between Qwen3's reasoning and non-reasoning conditions on
+the same backend, suggestive of harness-level fragility under certain
+response shapes.
 
 ---
 
@@ -158,7 +176,7 @@ literature (3.3, 3.4) does not currently cover together in one design.
 ### 4.1 Purpose and Scope
 
 A specific, falsifiable, directional hypothesis for each confirmatory
-research question (RQ1, RQ2, RQ3, RQ6, RQ7), grounded in the rubric
+research question (RQ1, RQ2, RQ3, RQ6, RQ7, RQ8), grounded in the rubric
 categories (Section 8) and the analysis thresholds already fixed in 10.3 —
 not a restatement of the research question, but a prediction with a stated
 direction and a stated observation that would refute it. RQ4 (exploratory)
@@ -203,6 +221,15 @@ lower Correct-rate than their US-English originals for at least some
 models; a similarly sized drop for both varieties points to a general
 non-US training-data bias rather than a UK-specific one, per the three-way
 test design in 10.3. Refuted by: no drop for either variety.
+
+**H8 (RQ8, added 2026-09-19).** At least one tested model will show a
+measurably different primary-category distribution (8.2) or
+Infrastructure-Failure rate (10.7) for the same item, under identical
+prompt and generation parameters, when served through a different
+backend — consistent with harness/serving-stack choice being a genuine,
+measurable source of behavioural variation, not merely a theoretical risk
+to disclose. Refuted by: no primary-category or Infrastructure-Failure-
+rate difference, for any tested model, between backends.
 
 ### 4.3 RQ4 and RQ5
 
@@ -840,10 +867,32 @@ sits behind `base_url` does not require a different harness setup.
 
 | Backend | Role | OpenAI-compatible API | Known gaps | Decision |
 |---|---|---|---|---|
-| Ollama | Pilot default | Yes | Compatibility layer omits `tool-choice`, `logprobs`, and `logit-bias`; its `think` parameter for reasoning-mode control is also not honoured (confirmed 2026-09-12) | Included — default for all runs except Set D **and Qwen3 (all sets, both sizes — see 9.3's override table and Limitations 12.11)** |
-| llama.cpp (`llama-server`) | Validated alternate | Yes, full field support | None documented | Included — used for Set D (RQ4), where `tool-choice` is required |
+| Ollama | Pilot default, and one leg of RQ8's full backend crossing | Yes | Compatibility layer omits `tool-choice`, `logprobs`, and `logit-bias`; its `think` parameter for reasoning-mode control is also not honoured (confirmed 2026-09-12) | Included — every registered model is run through Ollama (RQ8, Section 2), not only the five already defaulting to it; for Qwen3 this necessarily runs *without* reasoning-mode control (10.3's RQ8 method notes the resulting asymmetry) |
+| llama.cpp (`llama-server`) | Validated alternate; RQ8's other leg | Yes, full field support | Native chat-response parser (engaged by `--jinja`) intermittently rejects ordinary model output under certain response shapes — confirmed blocking one full condition (Limitations 12.12), build-specific, not yet bounded to a known trigger beyond "free-form preamble text" | Included — used for Set D (RQ4, `tool-choice` required), all Qwen3 traffic (12.11), and now every registered model (RQ8's full crossing, chosen 2026-09-19 over a cheaper backend-control-subset alternative) |
 | vLLM | Validated alternate | Yes, full field support | Heavier GPU/throughput profile than needed for edge-model testing | Included — available as a substitute for llama.cpp if needed |
 | LM Studio | Considered | No — GUI-oriented, no headless server suited to this pipeline | N/A | Excluded — not suited to a reproducible, containerised pipeline |
+
+**Harness Behavioural Constraints Log (added 2026-09-19).** Distinct from
+"Known gaps" above (missing API fields), this logs a harness's own design
+choices about what a model is *allowed* to do through it — the concrete
+evidence base RQ8 exists to test, not assumed:
+
+| Harness | Constraint | Evidence | First observed |
+|---|---|---|---|
+| Ollama | No mechanism to control reasoning-mode (`think`/`enable_thinking`-equivalent) at all through its OpenAI-compatible endpoint | Confirmed directly against a live request (9.3 override table) | 2026-09-12 |
+| llama.cpp (`--jinja`) | Native chat-parser (`common_chat_peg_parse`) intermittently rejects otherwise-valid model output; response *structure* (a free-form preamble before the answer) is the current best lead, not item content | Blocked `qwen3_4b_nonreasoning` completely across all 3 replicates; reproduced on two unrelated corpus items | 2026-09-18 (Limitations 12.12) |
+
+### 9.2.1 Backend Register Versioning
+
+The Backend Register is versioned the same way the Model, Language and
+Corpus Registers are (5.8, 6.5, 7.5): a starting scale, not a ceiling.
+Adding a harness this pilot has not yet tested is an ordinary registry
+expansion — a new row in the table above, vetted against the same
+OpenAI-compatible-API and known-gaps criteria already applied — not a
+redesign of this section or of RQ8's method (10.3). The Behavioural
+Constraints Log above is expected to grow the same way: a new harness is
+expected to bring its own, currently-unknown constraints, not merely
+inherit the two logged here.
 
 Ollama runs natively
 on the Windows host, using its own native GPU access, not inside a
@@ -1133,6 +1182,20 @@ actually been run.
 | RQ4 | Model's tool-invocation decision vs. Set D's ground-truth `tool_required` label | Contingency table (over-/under-/correctly-invoked), compared between Simulated and Live mode via McNemar's | As RQ1 | Exploratory |
 | RQ6 | Correct-rate, original vs. perturbed twin, per model | McNemar's exact test | A drop of 5 percentage points or more is treated as contamination-indicative rather than noise | Confirmatory |
 | RQ7 | Correct-rate across the US/UK/AU triplet | Cochran's Q test (three-way paired comparison), followed by pairwise McNemar with correction if Q is significant | As RQ1 | Confirmatory |
+| RQ8 | Primary-category rate (and, separately, Infrastructure-Failure rate) for the same item, same model, same parameters, across the Ollama/llama.cpp pair | McNemar's exact test | As RQ1 | Confirmatory |
+
+**RQ8 method notes (added 2026-09-19).** Paired exactly like RQ1's
+language pairing (same item, two conditions), substituting backend for
+language — no new statistical machinery, reusing 10.3's existing
+McNemar/majority-vote infrastructure per model. One asymmetry, stated
+here rather than discovered during analysis: Qwen3's Ollama-side data
+necessarily runs without reasoning-mode control (9.2's Harness
+Behavioural Constraints Log — Ollama has no `think`-equivalent parameter
+at all), so Qwen3's RQ8 pairing compares llama.cpp-with-reasoning-mode-
+fixed against Ollama-with-whatever-its-uncontrolled-default-is, not a
+clean single-variable change the way every other model's RQ8 pairing is.
+Reported and interpreted with that caveat attached, not pooled into the
+same confidence as the other six models' RQ8 pairs.
 
 **Alpha and the RQ6 threshold, confirmed by the study owner (2026-09-08).**
 Alpha = 0.05 is the conventional default, not a value specific to this
@@ -1194,9 +1257,10 @@ claim.
 **Family definition, per model (stated explicitly here, 2026-09-16 —
 previously only implemented in `analysis/cli.py`, not pre-registered).**
 Because 10.2 already reports every model separately rather than pooling
-them, the Holm-Bonferroni family above is one set of up to four tests —
-RQ1, RQ2, RQ6, RQ7's primary comparisons — corrected together *within
-each model*, not across the full model x RQ grid. This is a deliberate
+them, the Holm-Bonferroni family above is one set of up to five tests —
+RQ1, RQ2, RQ6, RQ7, and now RQ8's primary comparisons (added 2026-09-19)
+— corrected together *within each model*, not across the full model x RQ
+grid. This is a deliberate
 choice, not an oversight: RQ6's own hypothesis (H6, 4.2) is explicitly
 per-model ("the size of that drop will vary by model"), and a single
 pooled test across models would contradict that framing by treating a

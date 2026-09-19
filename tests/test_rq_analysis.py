@@ -12,6 +12,7 @@ from analysis.rq_analysis import (
     rq3_currency_descriptive,
     rq6_contamination_check,
     rq7_variety_triplet,
+    rq8_backend_divergence,
 )
 
 
@@ -294,6 +295,48 @@ def test_rq2_collapses_replicates_of_the_same_variant_via_majority_vote():
     result = rq2_jurisdiction_default(unspecified_rows, specified_rows)
     assert result.n_pairs == 1
     assert result.unspecified_wrong_default_rate == 1.0
+
+
+# --- RQ8 (added 2026-09-19) ------------------------------------------------
+
+
+def test_rq8_backend_divergence_pairs_on_question_id_directly():
+    # Unlike RQ1, both sides use the *same* question_id -- backend choice
+    # doesn't change which item this is, so no language_variant_of indirection.
+    ollama_rows = [
+        _row("A-1-en", "Correct"),
+        _row("A-2-en", "Correct"),
+        _row("A-3-en", "Incorrect-Guess"),
+    ]
+    llamacpp_rows = [
+        _row("A-1-en", "Incorrect-Guess"),  # discordant: ollama correct, llamacpp wrong
+        _row("A-2-en", "Correct"),  # concordant
+        _row("A-3-en", "Correct"),  # discordant: ollama wrong, llamacpp correct
+    ]
+    result = rq8_backend_divergence(ollama_rows, llamacpp_rows)
+    assert result.n_pairs == 3
+    assert result.condition_a_rate == pytest.approx(2 / 3)
+    assert result.condition_b_rate == pytest.approx(2 / 3)
+    assert result.mcnemar.p_value == 1.0  # b=1, c=1, symmetric
+
+
+def test_rq8_ignores_items_only_present_on_one_backend():
+    ollama_rows = [_row("A-1-en", "Correct")]
+    llamacpp_rows = [_row("A-9-en", "Correct")]  # different item, no pairing
+    result = rq8_backend_divergence(ollama_rows, llamacpp_rows)
+    assert result.n_pairs == 0
+
+
+def test_rq8_detects_a_real_backend_divergence():
+    # e.g. a harness-specific parser issue makes one backend fail items the
+    # other answers fine -- the shape RQ8 exists to catch (Limitations 12.12).
+    ollama_rows = [_row(f"A-{i}-en", "Correct") for i in range(6)]
+    llamacpp_rows = [_row(f"A-{i}-en", "Infrastructure-Failure") for i in range(6)]
+    result = rq8_backend_divergence(ollama_rows, llamacpp_rows)
+    assert result.n_pairs == 6
+    assert result.condition_a_rate == 1.0
+    assert result.condition_b_rate == 0.0
+    assert result.mcnemar.p_value < 0.05
 
 
 # --- Primary confirmatory set correction (10.5) ---------------------------

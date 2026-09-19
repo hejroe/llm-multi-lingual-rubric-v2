@@ -43,6 +43,7 @@ from analysis.rq_analysis import (
     rq3_currency_descriptive,
     rq6_contamination_check,
     rq7_variety_triplet,
+    rq8_backend_divergence,
 )
 
 PRIMARY_LANGUAGE = (
@@ -286,6 +287,39 @@ def _report_for_model(rows: list[dict], label: str) -> None:
             else:
                 print("  (Q not significant — pairwise comparisons not run, per 10.3)")
 
+    print(f"\n--- RQ8: Backend divergence, same item across backends: {label} ---")
+    backends_present = sorted({r["backend"] for r in rows if r.get("backend")})
+    if len(backends_present) < 2:
+        print(
+            "  skipped: needs this model run through at least two backends "
+            f"(found: {backends_present or 'none'})"
+        )
+    else:
+        # RQ8 has no language/domain selection to make (like RQ7) -- backend
+        # choice isn't scoped to one family, so the primary comparison pairs
+        # on every item common to both backends, not one domain/language.
+        backend_a, backend_b = backends_present[0], backends_present[1]
+        a_rows = _by(rows, backend=backend_a)
+        b_rows = _by(rows, backend=backend_b)
+        result = rq8_backend_divergence(a_rows, b_rows)
+        if result.n_pairs == 0:
+            print(
+                f"  skipped: no paired items found between {backend_a} and {backend_b}"
+            )
+        else:
+            print(
+                f"  {backend_a} vs {backend_b}: n={result.n_pairs}, "
+                f"{backend_a}={result.condition_a_rate:.1%}, "
+                f"{backend_b}={result.condition_b_rate:.1%}, "
+                f"McNemar p={result.mcnemar.p_value:.4f}"
+            )
+            primary_p_values["RQ8"] = result.mcnemar.p_value
+        if len(backends_present) > 2:
+            print(
+                f"  note: more than two backends present {backends_present}; "
+                "only the first two compared"
+            )
+
     print(
         f"\n--- Primary confirmatory set (10.5), Holm-Bonferroni-corrected: {label} ---"
     )
@@ -304,7 +338,7 @@ def _report_for_model(rows: list[dict], label: str) -> None:
                 f"  {corr_label}: raw p={raw_p:.4f} -> {verdict} "
                 "(corrected, alpha=0.05)"
             )
-        missing = {"RQ1", "RQ2", "RQ6", "RQ7"} - set(primary_p_values)
+        missing = {"RQ1", "RQ2", "RQ6", "RQ7", "RQ8"} - set(primary_p_values)
         if missing:
             print(
                 f"  note: {', '.join(sorted(missing))} not yet part of this "

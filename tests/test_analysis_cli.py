@@ -88,3 +88,27 @@ def test_main_reports_each_model_separately(tmp_path, capsys):
     # Each model's own RQ1 line should reflect only that model's rows.
     assert "en=100.0%, de=0.0%" in out  # llama3.2:1b: discordant
     assert "en=100.0%, de=100.0%" in out  # phi4-mini: concordant
+    # Neither model has been run through a second backend yet -- RQ8 (added
+    # 2026-09-19) should report skipped, not crash on a missing field.
+    assert "RQ8" in out
+    assert "skipped: needs this model run through at least two backends" in out
+
+
+def test_main_reports_rq8_once_a_model_has_two_backends(tmp_path, capsys):
+    rows = [
+        _row("A-1-en", "Correct", "llama3.2:1b", backend="ollama"),
+        _row("A-2-en", "Correct", "llama3.2:1b", backend="ollama"),
+        _row("A-1-en", "Correct", "llama3.2:1b", backend="llamacpp"),
+        _row("A-2-en", "Infrastructure-Failure", "llama3.2:1b", backend="llamacpp"),
+    ]
+    scored_path = tmp_path / "scored.jsonl"
+    with open(scored_path, "w", encoding="utf-8") as f:
+        for row in rows:
+            f.write(json.dumps(row) + "\n")
+
+    exit_code = main(["--scored", str(scored_path)])
+    assert exit_code == 0
+
+    out = capsys.readouterr().out
+    # backends_present is sorted alphabetically ("llamacpp" before "ollama").
+    assert "llamacpp vs ollama: n=2, llamacpp=50.0%, ollama=100.0%" in out

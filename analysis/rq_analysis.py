@@ -116,6 +116,47 @@ def rq1_language_gap(
     )
 
 
+def rq8_backend_divergence(
+    backend_a_rows: list[dict], backend_b_rows: list[dict]
+) -> PairedPointResult:
+    """RQ8 (10.3, added 2026-09-19): Correct-category rate, same items,
+    same model, same parameters, across a backend pair (e.g. Ollama vs
+    llama.cpp) -- paired directly by `question_id` on *both* sides, unlike
+    RQ1's language pairing, since backend choice doesn't change which item
+    this is (no `language_variant_of` indirection needed). Callers must
+    pre-filter both row lists to one model (and, for Qwen3, be aware the
+    Ollama side runs without reasoning-mode control -- 10.3's RQ8 method
+    notes)."""
+    a_correct = _aggregate_by_key(
+        backend_a_rows, lambda r: r["question_id"], _is_correct
+    )
+    b_correct = _aggregate_by_key(
+        backend_b_rows, lambda r: r["question_id"], _is_correct
+    )
+
+    common_ids = sorted(set(a_correct) & set(b_correct))
+    n_pairs = len(common_ids)
+    b = c = 0
+    a_correct_count = b_correct_count = 0
+
+    for qid in common_ids:
+        a_ok = a_correct[qid]
+        b_ok = b_correct[qid]
+        a_correct_count += a_ok
+        b_correct_count += b_ok
+        if a_ok and not b_ok:
+            b += 1
+        elif b_ok and not a_ok:
+            c += 1
+
+    return PairedPointResult(
+        n_pairs=n_pairs,
+        condition_a_rate=a_correct_count / n_pairs if n_pairs else 0.0,
+        condition_b_rate=b_correct_count / n_pairs if n_pairs else 0.0,
+        mcnemar=mcnemar_exact(b, c),
+    )
+
+
 @dataclass
 class ContaminationCheckResult:
     n_pairs: int

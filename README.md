@@ -291,9 +291,10 @@ Set F, directly motivated by the first full pilot run's own findings
 (`docs/PILOT_RESULTS.md`); reviewed and signed off by the study owner,
 2026-09-15 (`corpus/v0.3/README.md`'s own "Review status" section has
 the detail). `corpus/v0.4/` (2026-09-16) expands Set E only — German
-items grow from 5 to 12, clearing RQ6's McNemar power floor — and is
-**not yet reviewed** (`review_status: candidate` throughout the new
-rows), not usable as confirmatory evidence until it is. Each
+items grow from 5 to 12, clearing RQ6's McNemar power floor — reviewed
+and accepted by the study owner, 2026-09-19 (`corpus/v0.4/README.md`'s
+own "Review status" section has the detail), alongside a native-reader
+check of the existing 21 Set F triplets. Each
 version's own README states what's verified and what's a scoping choice
 rather than an oversight. This folder is under local git
 version control (`.gitignore` excludes `results/` at volume) with a clean

@@ -460,10 +460,13 @@ correctness fix (`F-KNOW-10`'s unconverted "catalyze," a gap in the
 `-ize/-ise` mechanism that a `-yze/-yse` word falls outside of — the
 `v0.3` copy is left as published, since a pilot run was already using it
 at the time this was found; `corpus/v0.4/README.md` has the full
-reasoning). Every new Set E row is `review_status: candidate` — **not yet
-reviewed by the study owner, and not usable as confirmatory RQ6-DE
-evidence until that review happens**, per this section's own established
-discipline.
+reasoning). Every new Set E row was drafted as `review_status: candidate`,
+reviewed and accepted by the study owner 2026-09-19 (Appendix A.4 has the
+per-item detail) — usable as confirmatory RQ6-DE evidence per this
+section's own established discipline. A native-reader check of the
+existing 21 Set F triplets was also completed by the study owner on the
+same date, closing the sensitivity-validation gap Appendix A.2 had left
+open (beyond the mechanical `catalyze` fix already applied above).
 
 ---
 
@@ -1739,6 +1742,15 @@ expanding Set E, 5.8), since `v0.4` had not yet been used for any run at
 the time the fix was made. The new category is added to the active
 tables now so no future Set F build reproduces the same gap.
 
+**Native-reader check completed (2026-09-19).** The self-review spot-
+check above was a partial stand-in, not a substitute, for m3's actual
+requirement. The study owner has since completed a genuine native-reader
+check of the existing 21 Set F triplets against the style guides cited
+above, beyond the mechanical `catalyze` fix — confirmed correct. This
+closes m3's outstanding sensitivity-validation gap; a fresh check remains
+good practice for any future Set F expansion, not a one-off exemption
+from it.
+
 **US to Australian**
 
 | US | Australian | Category | Note |
@@ -1837,20 +1849,20 @@ reviewed and accepted by the study owner, 2026-09-15.
 targeting RQ6-DE's power floor (10.5).** Generator: Claude (Anthropic),
 same method and same assistant as every prior batch. Each source item was
 previously unused by any existing Set E or Set F item, keeping the two
-sets' signal on distinct underlying facts. **Not yet reviewed — logged as
-drafted, `review_status: candidate`, per 9.4.1's mandatory-human-review
-requirement. Do not treat these as usable evidence until this table is
-updated to show a reviewer and date.**
+sets' signal on distinct underlying facts. **Reviewed and accepted by the
+study owner, 2026-09-19** (per 9.4.1's mandatory-human-review
+requirement) — `review_status` in `corpus/v0.4/set_e.csv` and the table
+below both reflect that sign-off.
 
 | Source item | Perturbed item | Change type | Review outcome |
 |---|---|---|---|
-| `A-KNOW-06-en`/`A-KNOW-06-de` (sister-chromatid separation timing in meiosis; gold: C, "sister chromatids separate during meiosis I" is the false statement) | `E-KNOW-10-en`/`E-KNOW-10-de`: "...At which division do sister chromatids themselves actually separate?" | Concept restatement — converts a negation-MCQ ("which is NOT true") into a direct positive question about the same underlying fact | Candidate — drafted 2026-09-16, awaiting review |
-| `A-KNOW-09-en`/`A-KNOW-09-de` (Le Chatelier's principle at equilibrium; gold: A, "removing some of reactant C") | `E-KNOW-11-en`/`E-KNOW-11-de`: "...what change to the reaction mixture would push it to produce more of product C?" | Concept restatement — same scenario and principle, reworded from an MCQ-option-selection format to an open question | Candidate — drafted 2026-09-16, awaiting review |
-| `A-KNOW-12-en`/`A-KNOW-12-de` (oblique cleavage terminology; gold: H) | `E-KNOW-12-en`/`E-KNOW-12-de`: "...What is this pattern of cleavage called?" | Concept restatement — describes the geometric relationship (angle to the polar axis) rather than naming it, then asks for the term | Candidate — drafted 2026-09-16, awaiting review |
-| `A-KNOW-13-en`/`A-KNOW-13-de` (acetylcholine vs. intracellular second messengers; gold: C, acetylcholine is the exception) | `E-KNOW-13-en`/`E-KNOW-13-de`: "...does it act as one of these intracellular relay molecules, or does it act at the surface receptor itself?" | Concept restatement — converts a negation-MCQ into a direct either/or question about the same distinction | Candidate — drafted 2026-09-16, awaiting review |
-| `A-KNOW-14-en`/`A-KNOW-14-de` (fungi excluded from photosynthesis; gold: A, photosynthesis is the exception) | `E-KNOW-14-en`/`E-KNOW-14-de`: "...why can't fungi make their own glucose directly from sunlight and carbon dioxide the way plants do?" | Concept restatement — converts a negation-MCQ into a direct "why not" question about the same underlying fact | Candidate — drafted 2026-09-16, awaiting review |
-| `A-KNOW-17-en`/`A-KNOW-17-de` (homeotic-gene mutation and segment identity; gold: H, "transformation of one segment into another") | `E-KNOW-15-en`/`E-KNOW-15-de`: "...a segment doesn't simply disappear or duplicate — instead, what actually happens to it?" | Concept restatement — states what the defect is not, then asks what it actually is, rather than rewording "transformation" | Candidate — drafted 2026-09-16, awaiting review |
-| `A-KNOW-18-en`/`A-KNOW-18-de` (xylem's water-conducting cell types; gold: B, "tracheids and vessel elements") | `E-KNOW-16-en`/`E-KNOW-16-de`: "...What are the two specialised, non-living conducting cell types that make up this tissue?" | Concept restatement — describes the function and property (non-living, conducting) rather than rewording "xylem plant cell types" | Candidate — drafted 2026-09-16, awaiting review |
+| `A-KNOW-06-en`/`A-KNOW-06-de` (sister-chromatid separation timing in meiosis; gold: C, "sister chromatids separate during meiosis I" is the false statement) | `E-KNOW-10-en`/`E-KNOW-10-de`: "...At which division do sister chromatids themselves actually separate?" | Concept restatement — converts a negation-MCQ ("which is NOT true") into a direct positive question about the same underlying fact | Accepted — study owner, 2026-09-19 |
+| `A-KNOW-09-en`/`A-KNOW-09-de` (Le Chatelier's principle at equilibrium; gold: A, "removing some of reactant C") | `E-KNOW-11-en`/`E-KNOW-11-de`: "...what change to the reaction mixture would push it to produce more of product C?" | Concept restatement — same scenario and principle, reworded from an MCQ-option-selection format to an open question | Accepted — study owner, 2026-09-19 |
+| `A-KNOW-12-en`/`A-KNOW-12-de` (oblique cleavage terminology; gold: H) | `E-KNOW-12-en`/`E-KNOW-12-de`: "...What is this pattern of cleavage called?" | Concept restatement — describes the geometric relationship (angle to the polar axis) rather than naming it, then asks for the term | Accepted — study owner, 2026-09-19 |
+| `A-KNOW-13-en`/`A-KNOW-13-de` (acetylcholine vs. intracellular second messengers; gold: C, acetylcholine is the exception) | `E-KNOW-13-en`/`E-KNOW-13-de`: "...does it act as one of these intracellular relay molecules, or does it act at the surface receptor itself?" | Concept restatement — converts a negation-MCQ into a direct either/or question about the same distinction | Accepted — study owner, 2026-09-19 |
+| `A-KNOW-14-en`/`A-KNOW-14-de` (fungi excluded from photosynthesis; gold: A, photosynthesis is the exception) | `E-KNOW-14-en`/`E-KNOW-14-de`: "...why can't fungi make their own glucose directly from sunlight and carbon dioxide the way plants do?" | Concept restatement — converts a negation-MCQ into a direct "why not" question about the same underlying fact | Accepted — study owner, 2026-09-19 |
+| `A-KNOW-17-en`/`A-KNOW-17-de` (homeotic-gene mutation and segment identity; gold: H, "transformation of one segment into another") | `E-KNOW-15-en`/`E-KNOW-15-de`: "...a segment doesn't simply disappear or duplicate — instead, what actually happens to it?" | Concept restatement — states what the defect is not, then asks what it actually is, rather than rewording "transformation" | Accepted — study owner, 2026-09-19 |
+| `A-KNOW-18-en`/`A-KNOW-18-de` (xylem's water-conducting cell types; gold: B, "tracheids and vessel elements") | `E-KNOW-16-en`/`E-KNOW-16-de`: "...What are the two specialised, non-living conducting cell types that make up this tissue?" | Concept restatement — describes the function and property (non-living, conducting) rather than rewording "xylem plant cell types" | Accepted — study owner, 2026-09-19 |
 
 ### A.5 Versioning
 

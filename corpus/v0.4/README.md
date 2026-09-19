@@ -28,8 +28,9 @@ caught when `v0.3` was built.
   rather than landing exactly on it. All 14 new rows are
   `review_status: candidate`, pending the study owner's sign-off (9.4.1,
   11.4) — drafted by Claude (Anthropic), the same general-purpose LLM
-  used for every previous Set E batch, per 9.4.1's method. **Not yet
-  usable as confirmatory evidence until reviewed.**
+  used for every previous Set E batch, per 9.4.1's method. **Reviewed and
+  accepted by the study owner, 2026-09-19** (STUDY_PROTOCOL.md Appendix
+  A.4 has the per-item detail) — usable as confirmatory RQ6-DE evidence.
 - **Set F erratum fix**: `F-KNOW-10`'s UK/AU variants both still read
   "...added to **catalyze** the formation of fibrin" in `v0.3` — an
   unconverted US spelling, found by a spot-check of the existing 21
@@ -71,10 +72,12 @@ trivial synonym swap (9.4.1's good/bad-example distinction).
 ## Review status
 
 Same discipline as every previous release: drafted as `candidate`, not
-self-certified. These 14 rows are not usable as confirmatory RQ6-DE
-evidence until the study owner has reviewed them and `review_status` has
-been updated accordingly (5.3/9.4.1/11.4) — do not run a confirmatory RQ6
-analysis against this file before that review happens.
+self-certified. **That review has since been completed**: the study
+owner (2026-09-19) reviewed all 14 new rows and confirmed them correct,
+alongside a native-reader check of the existing 21 Set F triplets
+(STUDY_PROTOCOL.md Appendix A.2). `review_status` in `set_e.csv` reflects
+that sign-off (`accepted`, matching the existing 12 rows) — usable as
+confirmatory RQ6-DE evidence.
 
 ## Known scope limitations of this release
 
